@@ -1,0 +1,16 @@
+services:
+    mr-do-snapclient:
+        image: riemerk/mr-do-snapclient:latest
+        container_name: mr-do-snapclient
+        command: -h 127.0.0.1 -i 2
+        environment:
+            - PUID=1000
+            - PGID=1000
+            - DEVICE_NAME=Snapclient
+            - TZ=Europe/Berlin
+        devices:
+            - /dev/snd
+        hostname: myClientName
+        restart: unless-stopped
+#        depends_on:
+#            - mr-do-snapserver

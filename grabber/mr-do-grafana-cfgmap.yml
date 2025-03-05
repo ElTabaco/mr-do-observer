@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-config
+  namespace: mr-do-observer
+  labels:
+    grafana_dashboard: "1"
+data:
+  network-traffic-dashboard.json: |
+    {contents of network-traffic-dashboard.json}

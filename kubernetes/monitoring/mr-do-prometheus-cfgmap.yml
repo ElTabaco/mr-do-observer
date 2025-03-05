@@ -1,0 +1,16 @@
+### Create a ServiceMonitor for the pod’s namespace
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prometheus-config
+  namespace: mr-do-observer # Prometheus namespace
+  labels:
+    name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+      - job_name: 'kubernetes-nodes'
+        static_configs:
+          - targets: ['localhost:9100']

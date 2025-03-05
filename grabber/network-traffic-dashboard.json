@@ -1,0 +1,17 @@
+{
+    "dashboard": {
+        "title": "Pod Network Traffic",
+        "panels": [
+            {
+                "title": "Traffic Over Time",
+                "type": "graph",
+                "targets": [
+                    {
+                        "expr": "rate(pod_network_traffic_bytes_total[5m])",
+                        "legendFormat": "{{pod}}"
+                    }
+                ]
+            }
+        ]
+    }
+}

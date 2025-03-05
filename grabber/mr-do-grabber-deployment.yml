@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traffic-grabber
+  namespace: mr-do-observer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traffic-grabber
+  template:
+    metadata:
+      labels:
+        app: traffic-grabber
+    spec:
+      containers:
+        - name: traffic-grabber
+          image: your-docker-repo/traffic-grabber:latest
+          ports:
+            - containerPort: 9100

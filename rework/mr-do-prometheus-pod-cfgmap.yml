@@ -1,0 +1,27 @@
+### Create a ServiceMonitor for the pod’s namespace
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: my-pod-traffic-monitor
+  namespace: mr-do-observer  # Prometheus namespace
+  labels:
+    name: prometheus-config
+spec:
+  selector:
+    matchLabels:
+      app: mr-do-player # Label of the target pod
+  namespaceSelector:
+    matchNames:
+      - mr-do-player  # Namespace of the pod you want to monitor
+  endpoints:
+    - port: http-metrics  # Port exposing metrics
+      interval: 15s
+
+#data:
+#  prometheus.yml: |
+#    global:
+#      scrape_interval: 15s
+#        relabel_configs:
+#          - source_labels: [__meta_kubernetes_namespace]
+#            action: keep
+#            regex: your-app-namespace
