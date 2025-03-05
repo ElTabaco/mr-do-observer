@@ -21,3 +21,17 @@ Simple observer to monitor kubernetes pods and application running in this pods
 - <input type="checkbox" disabled /> Modify grabber to run as es service
 - <input type="checkbox" disabled /> Exstend dashboards to monitor own applications
 - <input type="checkbox" disabled /> Exstend dashboards to monitor own applications timings
+
+##
+
+- <input type="checkbox" disabled /> Remove ServiceMonitor CRD  yaml file and use helm or script instead
+  - ServiceMonitor CRD runs directly on the Kubernetes cluster, let’s install the CRDs and the Prometheus Operator directly via YAML.
+     ```shell
+    kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml -n my-namespace
+    ```
+  - or helm.
+     ```shell
+    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    helm repo update
+    helm install prometheus-operator prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
+    ```
