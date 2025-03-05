@@ -1,4 +1,7 @@
 kubectl create namespace mr-do-observer
+# Apply ServiceMonitor CRD
+kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml  -n mr-do-observer
+
 kubectl apply -f mr-do-observer-pv.yml
 kubectl apply -f mr-do-observer-pvc.yml
 kubectl create configmap mr-do-snapserver-cfgmap --from-file=etc/snapserver.conf -n mr-do-observer
@@ -27,3 +30,6 @@ kubectl get services  -n mr-do-observer -o wide
 kubectl describe services mr-do-observer-service -n mr-do-observer
 
 kubectl get all -n mr-do-observer
+
+echo Verify the CRD is installed
+kubectl get crd servicemonitors.monitoring.coreos.com

@@ -6,11 +6,9 @@ metadata:
 spec:
   selector:
     app: grafana
-#  type: NodePort
   type: LoadBalancer
   loadBalancerIP: 192.168.0.11
   ports:
     - protocol: TCP
       port: 3000
       targetPort: 3000
-#      nodePort: 32000
