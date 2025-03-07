@@ -17,13 +17,13 @@ spec:
         - name: prometheus
           image: prom/prometheus:latest
           args:
-            - '--config.file=/etc/prometheus/prometheus.yml'
+            - "--config.file=/etc/prometheus/prometheus.yml"
           ports:
             - containerPort: 9090
           volumeMounts:
-            - name: prometheus-config-volume
+            - name: config-volume
               mountPath: /etc/prometheus/
       volumes:
-        - name: prometheus-config-volume
+        - name: config-volume
           configMap:
             name: prometheus-config

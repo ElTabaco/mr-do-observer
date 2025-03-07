@@ -9,6 +9,12 @@ Simple observer to monitor kubernetes pods and application running in this pods
 * [Grafana](https://grafana.com/)
 * [Docker](https://docs.docker.com/get-started/docker-concepts/building-images/build-tag-and-publish-an-image/js) and [JavaScript](https://www.javascript.com/) for custom grabber
 
+## Config
+
+* Prometheus data source URL field:
+  ```
+  http://prometheus-service.mr-do-observer.svc.cluster.local:9090
+  ```
 
 ## TODOs
 
@@ -22,7 +28,7 @@ Simple observer to monitor kubernetes pods and application running in this pods
 - <input type="checkbox" disabled /> Exstend dashboards to monitor own applications
 - <input type="checkbox" disabled /> Exstend dashboards to monitor own applications timings
 
-##
+## Cleanup
 
 - <input type="checkbox" disabled /> Remove ServiceMonitor CRD  yaml file and use helm or script instead
   - ServiceMonitor CRD runs directly on the Kubernetes cluster, let’s install the CRDs and the Prometheus Operator directly via YAML.
