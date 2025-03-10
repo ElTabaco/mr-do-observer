@@ -25,7 +25,7 @@ data:
 
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
-          - role: pod
+          - role: node
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
@@ -45,7 +45,7 @@ data:
           - source_labels: [__meta_kubernetes_pod_name]
             action: replace
             target_label: pod
-        scheme: https
-        tls_config:
-          insecure_skip_verify: true
-        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+#        scheme: https
+#        tls_config:
+#          insecure_skip_verify: true
+#        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
