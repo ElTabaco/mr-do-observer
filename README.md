@@ -16,6 +16,25 @@ Simple observer to monitor kubernetes pods and application running in this pods
   http://prometheus-service.mr-do-observer.svc.cluster.local:9090
   ```
 
+## Test
+
+## Test metric server
+     ```shell
+    kubectl get --raw /api/v1/nodes | jq
+    kubectl get --raw /apis/metrics.k8s.io/v1beta1/nodes | jq
+    ```
+### Metric server manifests
+
+* https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+
+or
+
+* https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+
+
+
+
 ## TODOs
 
 - <input type="checkbox" disabled checked /> RUN Prometheus & Grafane on premis (kubernetes)
