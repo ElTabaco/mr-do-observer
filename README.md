@@ -22,6 +22,8 @@ Simple observer to monitor kubernetes pods and application running in this pods
      ```shell
     kubectl get --raw /api/v1/nodes | jq
     kubectl get --raw /apis/metrics.k8s.io/v1beta1/nodes | jq
+    kubectl get pods -n kube-system | grep kube-state-metrics
+
     ```
 ### Metric server manifests
 

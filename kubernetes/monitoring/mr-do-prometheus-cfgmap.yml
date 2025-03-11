@@ -45,7 +45,7 @@ data:
           - source_labels: [__meta_kubernetes_pod_name]
             action: replace
             target_label: pod
-#        scheme: https
-#        tls_config:
-#          insecure_skip_verify: true
-#        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      # kube_pod_info from metrics server
+      - job_name: 'kube-state-metrics'
+        static_configs:
+          - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
