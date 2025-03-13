@@ -22,6 +22,16 @@ data:
         tls_config:
           insecure_skip_verify: true
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+      - job_name: 'kubelet'
+        kubernetes_sd_configs:
+          - role: node
+        scheme: https
+        tls_config:
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        metrics_path: /metrics/cadvisor
+
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
           - role: pod
@@ -36,20 +46,5 @@ data:
           - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
             action: replace
             target_label: __address__
-            regex: (.+):(?:\\d+);(\\d+)
+            regex: (.+?)(?::\d+)?;(\d+)
             replacement: $1:$2
-          - source_labels: [__meta_kubernetes_namespace]
-            action: replace
-            target_label: namespace
-          - source_labels: [__meta_kubernetes_pod_name]
-            action: replace
-            target_label: pod
-      - job_name: 'kubelet'
-        kubernetes_sd_configs:
-          - role: node
-        scheme: https
-        tls_config:
-          insecure_skip_verify: true
-        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        metrics_path: /metrics/cadvisor
-        
