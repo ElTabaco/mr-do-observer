@@ -46,7 +46,5 @@ data:
             target_label: instance
 
       - job_name: node
-        kubernetes_sd_configs:
-          - role: node
         static_configs:
           - targets: ['localhost:9100']

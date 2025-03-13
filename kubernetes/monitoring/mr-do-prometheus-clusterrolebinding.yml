@@ -9,5 +9,5 @@ roleRef:
   name: prometheus-kubelet-scraper
 subjects:
   - kind: ServiceAccount
-    name: default
+    name: prometheus-kubelet-scraper
     namespace: mr-do-observer
