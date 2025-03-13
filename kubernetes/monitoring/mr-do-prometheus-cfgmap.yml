@@ -11,7 +11,7 @@ data:
     global:
       scrape_interval: 15s
     scrape_configs:
-      - job_name: 'kubernetes-nodes' # kubelet
+      - job_name: 'kubernetes-nodes'
         kubernetes_sd_configs:
           - role: node
         scheme: https
@@ -44,3 +44,7 @@ data:
           - source_labels: [__meta_kubernetes_pod_label_app]
             action: replace
             target_label: instance
+
+      - job_name: node
+        static_configs:
+          - targets: ['localhost:9100']
