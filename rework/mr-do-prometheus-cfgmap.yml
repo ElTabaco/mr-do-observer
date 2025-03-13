@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-config
-  namespace: mr-do-observer # Prometheus namespace
+  namespace: monitoring
   labels:
     name: prometheus-config
 data:

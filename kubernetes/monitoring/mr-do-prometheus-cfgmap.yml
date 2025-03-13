@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-config
-  namespace: mr-do-observer # Prometheus namespace
+  namespace: monitoring
   labels:
     name: prometheus-config
 data:
@@ -50,3 +50,20 @@ data:
           - role: node
         static_configs:
           - targets: ['localhost:9100']
+
+      - job_name: 'prometheus'
+        static_configs:
+        - targets: ['localhost:9090']
+      - job_name: 'node-exporter'
+        # Use Kubernetes service discovery to find node-exporter endpoints in the monitoring namespace
+        kubernetes_sd_configs:
+        - role: endpoints
+          namespaces:
+            names: ['monitoring']
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_service_label_app]
+          action: keep
+          regex: node-exporter
+        - source_labels: [__meta_kubernetes_endpoint_port_name]
+          action: keep
+          regex: metrics

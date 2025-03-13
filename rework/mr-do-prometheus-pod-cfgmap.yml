@@ -3,7 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: my-pod-traffic-monitor
-  namespace: mr-do-observer  # Prometheus namespace
+  namespace: monitoring  # Prometheus namespace
   labels:
     name: prometheus-config
 spec:

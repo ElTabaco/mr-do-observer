@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana-dashboard-config
-  namespace: mr-do-observer
+  namespace: monitoring
   labels:
     grafana_dashboard: "1"
 data:

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: traffic-grabber
-  namespace: mr-do-observer
+  namespace: monitoring
 spec:
   replicas: 1
   selector:

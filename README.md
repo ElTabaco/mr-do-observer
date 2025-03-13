@@ -13,7 +13,7 @@ Simple observer to monitor kubernetes pods and application running in this pods
 
 * Prometheus data source URL field:
   ```
-  http://prometheus-service.mr-do-observer.svc.cluster.local:9090
+  http://prometheus-service.monitoring.svc.cluster.local:9090
   ```
 
 ## Test
