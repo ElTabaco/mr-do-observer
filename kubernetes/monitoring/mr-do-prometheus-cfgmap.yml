@@ -48,3 +48,7 @@ data:
             target_label: __address__
             regex: (.+?)(?::\d+)?;(\d+)
             replacement: $1:$2
+
+      - job_name: 'kubernetes-pods2'
+        kubernetes_sd_configs:
+          - role: pod
