@@ -1,12 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: prometheus-metrics-access-binding
+  name: prometheus-node-access-binding
   namespace: mr-do-observer
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: prometheus-metrics-access
+  name: prometheus-node-access
 subjects:
   - kind: ServiceAccount
     name: default
