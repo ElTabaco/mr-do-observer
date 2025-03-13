@@ -48,7 +48,3 @@ data:
       - job_name: 'metrics-server'
         static_configs:
           - targets: ['metrics-server.kube-system.svc.cluster.local:443']
-        scheme: https
-        tls_config:
-          insecure_skip_verify: true
-        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
