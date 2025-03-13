@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  namespace: monitoring
+  name: grafana-pv-data
+  labels:
+    usage: grafana-pv-data
+spec:
+  capacity:
+    storage: 2Gi
+  storageClassName: nfs
+  accessModes:
+    - ReadWriteMany
+  volumeMode: Filesystem
+  nfs:
+    server: mr0.local
+    path: "/srv/nfs4/homes/mr/observer/grafana/"
+    readOnly: false
