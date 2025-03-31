@@ -44,3 +44,15 @@ data:
           - source_labels: [__meta_kubernetes_pod_label_app]
             action: replace
             target_label: instance
+
+      - job_name: 'kube-state-metrics'
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - kube-system
+        relabel_configs:
+          # Keep only endpoints from the kube-state-metrics service with port "http-metrics"
+          - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+            action: keep
+            regex: kube-state-metrics;http-metrics
