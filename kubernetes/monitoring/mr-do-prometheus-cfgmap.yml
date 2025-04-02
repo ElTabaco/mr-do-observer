@@ -20,22 +20,22 @@ data:
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         metrics_path: /metrics/cadvisor
 
-      - job_name: 'kubernetes-pods'
-        kubernetes_sd_configs:
-          - role: pod
-        relabel_configs:
-          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-            action: keep
-            regex: true
-          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
-            action: replace
-            target_label: __metrics_path__
-            regex: (.+)
-          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
-            action: replace
-            target_label: __address__
-            regex: (.+?)(?::\d+)?;(\d+)
-            replacement: $1:$2
+      #- job_name: 'kubernetes-pods'
+      #  kubernetes_sd_configs:
+      #    - role: pod
+      #  relabel_configs:
+      #    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+      #      action: keep
+      #      regex: true
+      #    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+      #      action: replace
+      #      target_label: __metrics_path__
+      #      regex: (.+)
+      #    - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+      #      action: replace
+      #      target_label: __address__
+      #      regex: (.+?)(?::\d+)?;(\d+)
+      #      replacement: $1:$2
 
       - job_name: 'kubernetes-pods2'
         kubernetes_sd_configs:
@@ -45,14 +45,14 @@ data:
             action: replace
             target_label: instance
 
-      - job_name: 'kube-state-metrics'
-        kubernetes_sd_configs:
-          - role: endpoints
-            namespaces:
-              names:
-                - kube-system
-        relabel_configs:
-          # Keep only endpoints from the kube-state-metrics service with port "http-metrics"
-          - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
-            action: keep
-            regex: kube-state-metrics;http-metrics
+      #- job_name: 'kube-state-metrics'
+      #  kubernetes_sd_configs:
+      #    - role: endpoints
+      #      namespaces:
+      #        names:
+      #          - kube-system
+      #  relabel_configs:
+      #    # Keep only endpoints from the kube-state-metrics service with port "http-metrics"
+      #    - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+      #      action: keep
+      #      regex: kube-state-metrics;http-metrics
