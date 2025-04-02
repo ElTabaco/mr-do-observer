@@ -37,7 +37,7 @@ data:
       #      regex: (.+?)(?::\d+)?;(\d+)
       #      replacement: $1:$2
 
-      - job_name: 'kubernetes-pods2'
+      - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
           - role: pod
         relabel_configs:
