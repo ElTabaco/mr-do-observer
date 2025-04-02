@@ -17,12 +17,13 @@ spec:
     spec:
       serviceAccountName: kube-state-metrics
       containers:
-      - name: kube-state-metrics
-        image: quay.io/coreos/kube-state-metrics:v2.8.0
-        imagePullPolicy: IfNotPresent
-        ports:
-        - name: http-metrics
-          containerPort: 8080
-        args:
-        - --port=8080
-        - --telemetry-port=8081
+        - name: kube-state-metrics
+          image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.15.0
+          
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http-metrics
+              containerPort: 8080
+          args:
+            - --port=8080
+            - --telemetry-port=8081
