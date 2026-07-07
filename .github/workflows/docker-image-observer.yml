@@ -3,8 +3,18 @@ name: Docker Image CI observer
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'docker/**'
+      - 'traffic-grabber.js'
+      - '.dockerignore'
+      - '.github/workflows/docker-image-observer.yml'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'docker/**'
+      - 'traffic-grabber.js'
+      - '.dockerignore'
+      - '.github/workflows/docker-image-observer.yml'
 
 jobs:
 
