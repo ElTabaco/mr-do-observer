@@ -1,14 +1,13 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  namespace: monitoring
   name: grafana-pv-data
   labels:
     usage: grafana-pv-data
 spec:
   capacity:
     storage: 2Gi
-  storageClassName: grafana-nfs
+  storageClassName: ""
   accessModes:
     - ReadWriteMany
   volumeMode: Filesystem
