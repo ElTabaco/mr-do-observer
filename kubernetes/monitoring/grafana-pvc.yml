@@ -4,7 +4,7 @@ metadata:
   namespace: monitoring
   name: grafana-pvc-data
 spec:
-  storageClassName: grafana-nfs
+  storageClassName: ""
   accessModes:
     - ReadWriteMany
   resources:
