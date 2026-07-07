@@ -1,0 +1,47 @@
+# ArgoCD Application for the monitoring stack (grafana + prometheus)
+# Manages:
+#   - monitoring namespace
+#   - grafana + prometheus Deployments
+#   - grafana + prometheus Services
+#   - grafana PV + PVC
+#   - prometheus ConfigMap, ClusterRole, ClusterRoleBinding
+#
+# Sync-wave annotation on monitoring-ns.yml ensures the namespace
+# is created before any namespaced resources.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mr-do-observer-monitoring
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: mr-do-observer
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/managed-by: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ElTabaco/mr-do-observer.git
+    targetRevision: main
+    path: kubernetes/monitoring
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  ignoreDifferences:
+    # Service runtime fields
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /status
+        - /spec.loadBalancerIP
+        - /spec.clusterIP
+        - /spec.clusterIPs
+        - /spec.externalTrafficPolicy
+        - /spec.ipFamilyPolicy
+        - /spec.ipFamilies
+        - /spec.sessionAffinity
