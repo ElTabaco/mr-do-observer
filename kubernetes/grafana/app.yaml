@@ -1,10 +1,9 @@
 # ArgoCD Application for Grafana
 # Manages:
-#   - monitoring namespace (sync-wave -1 ensures it's created first)
 #   - grafana Deployment + Service
 #   - grafana PV + PVC (NFS)
 #
-# Prometheus lives in its own Application: kubernetes/prometheus/app.yaml
+# Depends on the monitoring namespace (kubernetes/base/namespace.yml).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
