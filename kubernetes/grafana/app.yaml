@@ -22,7 +22,7 @@ spec:
   source:
     repoURL: https://github.com/ElTabaco/mr-do-observer.git
     targetRevision: main
-    path: kubernetes/monitoring
+    path: kubernetes/grafana
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
