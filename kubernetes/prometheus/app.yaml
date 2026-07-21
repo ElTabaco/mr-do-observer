@@ -1,25 +1,25 @@
-# ArgoCD Application for Grafana
+# ArgoCD Application for Prometheus
 # Manages:
-#   - monitoring namespace (sync-wave -1 ensures it's created first)
-#   - grafana Deployment + Service
-#   - grafana PV + PVC (NFS)
+#   - prometheus Deployment + Service
+#   - prometheus PV + PVC (NFS, for TSDB persistence)
+#   - prometheus ConfigMap (scrape config), ClusterRole, ClusterRoleBinding
 #
-# Prometheus lives in its own Application: kubernetes/prometheus/app.yaml
+# Depends on the monitoring namespace created by mr-do-observer-grafana.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: mr-do-observer-grafana
+  name: mr-do-observer-prometheus
   namespace: argocd
   labels:
     app.kubernetes.io/name: mr-do-observer
-    app.kubernetes.io/component: grafana
+    app.kubernetes.io/component: prometheus
     app.kubernetes.io/managed-by: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/ElTabaco/mr-do-observer.git
     targetRevision: main
-    path: kubernetes/grafana
+    path: kubernetes/prometheus
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
@@ -35,7 +35,7 @@ spec:
       kind: Service
       jsonPointers:
         - /status
-        - /spec.loadBalancerIP
+        - /spec/loadBalancerIP
         - /spec/clusterIP
         - /spec/clusterIPs
         - /spec/externalTrafficPolicy
