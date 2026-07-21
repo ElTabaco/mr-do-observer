@@ -38,10 +38,12 @@ data:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
             regex: "true"
-          # Drop kube-system and argocd namespaces (infrastructure noise)
+          # Drop kube-system, argocd, and metallb-system namespaces
+          # (kube-system/argocd = infra noise; metallb = scraped via its own
+          # HTTPS job below, since its metrics port 9120 requires scheme: https)
           - source_labels: [__meta_kubernetes_namespace]
             action: drop
-            regex: kube-system|argocd
+            regex: kube-system|argocd|metallb-system
           # Override the metrics path if the annotation is set
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
             action: replace
@@ -74,3 +76,27 @@ data:
           - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
             action: keep
             regex: kube-state-metrics;http-metrics
+
+      # MetalLB — metrics on port 9120 over HTTPS (annotation-based scraping
+      # can't set scheme: https, so MetalLB gets its own job).
+      # Docs: https://metallb.universe.tf/configuration/#prometheus-metrics
+      - job_name: 'metallb'
+        scheme: https
+        tls_config:
+          insecure_skip_verify: true
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - metallb-system
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: keep
+            regex: metallb
+          - source_labels: [__address__, __meta_kubernetes_pod_container_port_number]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;9120
+            replacement: $1:9120
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_pod_label_component]
+            target_label: component
