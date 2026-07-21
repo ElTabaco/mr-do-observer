@@ -44,7 +44,25 @@ spec:
           volumeMounts:
             - name: grafana-pvc-data
               mountPath: /var/lib/grafana
+            - name: datasource-provider
+              mountPath: /etc/grafana/provisioning/datasources
+              readOnly: true
+            - name: dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+              readOnly: true
+            - name: dashboard-kubernetes
+              mountPath: /var/lib/grafana/dashboards/kubernetes
+              readOnly: true
       volumes:
         - name: grafana-pvc-data
           persistentVolumeClaim:
             claimName: grafana-pvc-data
+        - name: datasource-provider
+          configMap:
+            name: grafana-datasources
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+        - name: dashboard-kubernetes
+          configMap:
+            name: grafana-dashboard-kubernetes
