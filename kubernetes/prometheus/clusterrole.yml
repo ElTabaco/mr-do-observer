@@ -12,8 +12,9 @@ rules:
       - services
       - endpoints
     verbs: ["get", "list", "watch"]
-#  - apiGroups: ["metrics.k8s.io"]
-#    resources:
-#      - nodes
-#      - pods
-#    verbs: ["get", "list"]
+  # Allow scraping /metrics on non-resource URLs.
+  # Required for MetalLB controller-runtime metrics auth (SubjectAccessReview
+  # checks the caller can get /metrics). Also covers any other controller
+  # using the same auth pattern (cert-manager, etc).
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
