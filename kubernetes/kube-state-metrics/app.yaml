@@ -1,0 +1,29 @@
+# ArgoCD Application for kube-state-metrics
+#
+# Exposes kubernetes_* metrics (Deployments, Pods, PVCs, HPAs, etc.) on port 8080.
+# Scraped by Prometheus via the kube-state-metrics job in
+# kubernetes/prometheus/prometheus-configmap.yml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mr-do-observer-kube-state-metrics
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: mr-do-observer
+    app.kubernetes.io/component: kube-state-metrics
+    app.kubernetes.io/managed-by: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ElTabaco/mr-do-observer.git
+    targetRevision: main
+    path: kubernetes/kube-state-metrics
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
