@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: prometheus-deployment
   namespace: monitoring
+  labels:
+    app: prometheus
 spec:
   replicas: 1
   selector:
@@ -13,18 +15,49 @@ spec:
       labels:
         app: prometheus
     spec:
+      serviceAccountName: default
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: prometheus
-          image: prom/prometheus:latest
+          image: prom/prometheus:v3.13.1
+          imagePullPolicy: IfNotPresent
           args:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus/"
+            - "--storage.tsdb.retention.time=30d"
+            - "--storage.tsdb.retention.size=8GB"
+            - "--web.enable-lifecycle"
           ports:
             - containerPort: 9090
+              name: http
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           volumeMounts:
             - name: config-volume
               mountPath: /etc/prometheus/
+            - name: data-volume
+              mountPath: /prometheus/
       volumes:
         - name: config-volume
           configMap:
             name: prometheus-config
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: prometheus-pvc-data
