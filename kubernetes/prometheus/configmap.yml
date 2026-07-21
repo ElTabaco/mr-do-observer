@@ -79,24 +79,29 @@ data:
 
       # MetalLB — metrics on port 9120 over HTTPS (annotation-based scraping
       # can't set scheme: https, so MetalLB gets its own job).
+      # The :9120 endpoint also requires bearer token auth.
       # Docs: https://metallb.universe.tf/configuration/#prometheus-metrics
       - job_name: 'metallb'
         scheme: https
         tls_config:
           insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         kubernetes_sd_configs:
           - role: pod
             namespaces:
               names:
                 - metallb-system
         relabel_configs:
+          # Keep only MetalLB pods
           - source_labels: [__meta_kubernetes_pod_label_app]
             action: keep
             regex: metallb
-          - source_labels: [__address__, __meta_kubernetes_pod_container_port_number]
-            action: replace
-            regex: ([^:]+)(?::\d+)?;9120
-            replacement: $1:9120
+          # Keep only the metricshttps port (named 9120) — excludes webhook
+          # (9443) and memberlist (7946) ports on the same pods
+          - source_labels: [__meta_kubernetes_pod_container_port_name]
+            action: keep
+            regex: metricshttps
+          - source_labels: [__address__]
             target_label: __address__
           - source_labels: [__meta_kubernetes_pod_label_component]
             target_label: component
