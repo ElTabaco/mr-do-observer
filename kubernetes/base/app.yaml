@@ -1,26 +1,26 @@
-# ArgoCD Application for kube-state-metrics
+# ArgoCD Application for base cluster resources
 #
-# Exposes kubernetes_* metrics (Deployments, Pods, PVCs, HPAs, etc.) on port 8080.
-# Scraped by Prometheus via the kube-state-metrics job in
-# kubernetes/prometheus/configmap.yml
+# Shared resources that other components depend on. Sync-wave -1 on
+# namespace.yml ensures the monitoring namespace exists before any
+# grafana/prometheus/kube-state-metrics resources apply.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: mr-do-observer-kube-state-metrics
+  name: mr-do-observer-base
   namespace: argocd
   labels:
     app.kubernetes.io/name: mr-do-observer
-    app.kubernetes.io/component: kube-state-metrics
+    app.kubernetes.io/component: base
     app.kubernetes.io/managed-by: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/ElTabaco/mr-do-observer.git
     targetRevision: main
-    path: kubernetes/kube-state-metrics
+    path: kubernetes/base
   destination:
     server: https://kubernetes.default.svc
-    namespace: kube-system
+    namespace: monitoring
   syncPolicy:
     automated:
       prune: true
