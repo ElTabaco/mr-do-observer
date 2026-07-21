@@ -1,4 +1,3 @@
-### Create a ServiceMonitor for the pod’s namespace
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,7 +9,10 @@ data:
   prometheus.yml: |
     global:
       scrape_interval: 15s
+      evaluation_interval: 15s
+
     scrape_configs:
+      # Scrape kubelet cAdvisor metrics from each node (CPU/mem/network per pod)
       - job_name: 'kubernetes-nodes'
         kubernetes_sd_configs:
           - role: node
@@ -19,40 +21,56 @@ data:
           insecure_skip_verify: true
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         metrics_path: /metrics/cadvisor
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_node_name]
+            target_label: node
 
-      #- job_name: 'kubernetes-pods'
-      #  kubernetes_sd_configs:
-      #    - role: pod
-      #  relabel_configs:
-      #    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-      #      action: keep
-      #      regex: true
-      #    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
-      #      action: replace
-      #      target_label: __metrics_path__
-      #      regex: (.+)
-      #    - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
-      #      action: replace
-      #      target_label: __address__
-      #      regex: (.+?)(?::\d+)?;(\d+)
-      #      replacement: $1:$2
-
+      # Scrape pods that explicitly opt in via the annotation:
+      #   prometheus.io/scrape: "true"
+      # Optional annotations:
+      #   prometheus.io/port: "9090"   (override the discovered port)
+      #   prometheus.io/path: "/metrics" (override the metrics path)
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
           - role: pod
         relabel_configs:
-          - source_labels: [__meta_kubernetes_pod_label_app]
+          # Only keep pods annotated with prometheus.io/scrape=true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          # Drop kube-system and argocd namespaces (infrastructure noise)
+          - source_labels: [__meta_kubernetes_namespace]
+            action: drop
+            regex: kube-system|argocd
+          # Override the metrics path if the annotation is set
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
             action: replace
-            target_label: instance
+            target_label: __metrics_path__
+            regex: (.+)
+          # Override the port if the annotation is set
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          # Add useful labels
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
 
-      #- job_name: 'kube-state-metrics'
-      #  kubernetes_sd_configs:
-      #    - role: endpoints
-      #      namespaces:
-      #        names:
-      #          - kube-system
-      #  relabel_configs:
-      #    # Keep only endpoints from the kube-state-metrics service with port "http-metrics"
-      #    - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
-      #      action: keep
-      #      regex: kube-state-metrics;http-metrics
+      # kube-state-metrics (deployed separately in kube-system namespace)
+      # Exposes kubernetes_*  metrics: Deployments, Pods, PVCs, etc.
+      - job_name: 'kube-state-metrics'
+        honor_labels: true
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - kube-system
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+            action: keep
+            regex: kube-state-metrics;http-metrics
