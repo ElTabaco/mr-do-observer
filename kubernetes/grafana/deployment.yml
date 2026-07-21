@@ -53,6 +53,9 @@ spec:
             - name: dashboard-kubernetes
               mountPath: /var/lib/grafana/dashboards/kubernetes
               readOnly: true
+            - name: dashboard-metallb
+              mountPath: /var/lib/grafana/dashboards/metallb
+              readOnly: true
       volumes:
         - name: grafana-pvc-data
           persistentVolumeClaim:
@@ -66,3 +69,6 @@ spec:
         - name: dashboard-kubernetes
           configMap:
             name: grafana-dashboard-kubernetes
+        - name: dashboard-metallb
+          configMap:
+            name: grafana-dashboard-metallb

@@ -19,3 +19,13 @@ data:
         allowUiUpdates: true
         options:
           path: /var/lib/grafana/dashboards/kubernetes
+      - name: 'metallb'
+        orgId: 1
+        folder: 'Networking'
+        type: file
+        disableDeletion: false
+        editable: true
+        updateIntervalSeconds: 30
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards/metallb
