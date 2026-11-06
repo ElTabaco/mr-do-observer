@@ -166,11 +166,13 @@ def main():
     except Exception:
         lines.append("llm_server_up 0")
     else:
-        meta = (models.get("data") or [{}])[0].get("meta") or {}
+        first = (models.get("data") or [{}])[0]
+        meta = first.get("meta") or {}
         path = props.get("model_path", "")
         m = re.search(r"models--([^/]+)--([^/]+)/", path)
         labels = {
-            "alias": props.get("model_alias", ""),
+            # Strata lists the configured name (llama.cpp --alias equivalent) in "aliases"
+            "alias": (first.get("aliases") or [None])[0] or props.get("model_alias", ""),
             "model_file": os.path.basename(path),
             "model_repo": f"{m.group(1)}/{m.group(2)}" if m else "",
             "quant": (q.group(1) if (q := re.search(r"((?:UD-)?I?Q\d[\w]*?)(?:-\d{5}-of-\d{5})?\.gguf$", path))
@@ -187,22 +189,20 @@ def main():
             "# HELP llm_model_context_size Configured context size (tokens).",
             "# TYPE llm_model_context_size gauge",
             f"llm_model_context_size {gs.get('n_ctx') or meta.get('n_ctx', 0)}",
-            "# HELP llm_model_context_train Context size the model was trained for (tokens).",
-            "# TYPE llm_model_context_train gauge",
-            f"llm_model_context_train {meta.get('n_ctx_train', 0)}",
             "# HELP llm_model_slots Parallel slots (-np).",
             "# TYPE llm_model_slots gauge",
             f"llm_model_slots {props.get('total_slots', 0)}",
-            "# HELP llm_model_parameters Model parameter count.",
-            "# TYPE llm_model_parameters gauge",
-            f"llm_model_parameters {meta.get('n_params', 0)}",
-            "# HELP llm_model_size_bytes Model weights size in bytes.",
-            "# TYPE llm_model_size_bytes gauge",
-            f"llm_model_size_bytes {meta.get('size', 0)}",
             "# HELP llm_model_sleeping 1 if llama-server reports is_sleeping.",
             "# TYPE llm_model_sleeping gauge",
             f"llm_model_sleeping {int(bool(props.get('is_sleeping')))}",
         ]
+        # Only what the engine reports: Strata's /v1/models has no n_ctx_train/n_params/size -> series absent
+        # ("No data" in Grafana) instead of a misleading 0.
+        for name, key, help_ in (("llm_model_context_train", "n_ctx_train", "Context size the model was trained for (tokens)."),
+                                 ("llm_model_parameters", "n_params", "Model parameter count."),
+                                 ("llm_model_size_bytes", "size", "Model weights size in bytes.")):
+            if meta.get(key):
+                lines += [f"# HELP {name} {help_}", f"# TYPE {name} gauge", f"{name} {meta[key]}"]
         lines += slot_metrics()
     lines += amd_gpu_metrics()
     lines += [

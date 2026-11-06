@@ -987,13 +987,13 @@ data:
         },
         {
           "type": "stat",
-          "title": "MTP acceptance (range)",
+          "title": "Draft acceptance (range)",
           "id": 16,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Share of MTP draft tokens accepted by the target model.",
+          "description": "Share of draft tokens (llama.cpp MTP; Strata MTP or DFlash2) accepted by the target model.",
           "gridPos": {
             "h": 4,
             "w": 4,
@@ -1050,7 +1050,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "100 * increase(llamacpp:spec_decode_num_accepted_tokens_total{server=\"$server\"}[$__range]) / increase(llamacpp:spec_decode_num_draft_tokens_total{server=\"$server\"}[$__range])",
+              "expr": "(100 * increase(llamacpp:spec_decode_num_accepted_tokens_total{server=\"$server\"}[$__range]) / increase(llamacpp:spec_decode_num_draft_tokens_total{server=\"$server\"}[$__range])) or (100 * increase(strata:drafts_accepted_total{server=\"$server\"}[$__range]) / increase(strata:drafts_offered_total{server=\"$server\"}[$__range]))",
               "legendFormat": "",
               "refId": "A",
               "range": false,
@@ -1134,7 +1134,7 @@ data:
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Largest sequence (prompt + generation) since llama-server start, as % of the configured context.",
+          "description": "Largest sequence (prompt + generation) as % of the configured context: since start (llama.cpp) or within the selected time range (Strata, from /slots samples).",
           "gridPos": {
             "h": 4,
             "w": 5,
@@ -1191,7 +1191,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "100 * llamacpp:n_tokens_max{server=\"$server\"} / on(server) llm_model_context_size{server=\"$server\"}",
+              "expr": "(100 * llamacpp:n_tokens_max{server=\"$server\"} / on(server) llm_model_context_size{server=\"$server\"}) or (100 * max_over_time(sum by (server) (llm_slot_context_tokens{server=\"$server\"})[$__range:]) / on(server) sum by (server) (llm_slot_context_size{server=\"$server\"}))",
               "legendFormat": "",
               "refId": "A",
               "range": false,
@@ -1372,13 +1372,13 @@ data:
         },
         {
           "type": "timeseries",
-          "title": "MTP draft acceptance",
+          "title": "Draft acceptance",
           "id": 21,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "Accepted / drafted MTP tokens. Higher = bigger speed-up from speculative decoding.",
+          "description": "Accepted / drafted tokens (llama.cpp MTP; Strata MTP or DFlash2). Higher = bigger speed-up.",
           "gridPos": {
             "h": 10,
             "w": 8,
@@ -1441,7 +1441,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "100 * rate(llamacpp:spec_decode_num_accepted_tokens_total{server=\"$server\"}[$__rate_interval]) / rate(llamacpp:spec_decode_num_draft_tokens_total{server=\"$server\"}[$__rate_interval])",
+              "expr": "(100 * rate(llamacpp:spec_decode_num_accepted_tokens_total{server=\"$server\"}[$__rate_interval]) / rate(llamacpp:spec_decode_num_draft_tokens_total{server=\"$server\"}[$__rate_interval])) or (100 * rate(strata:drafts_accepted_total{server=\"$server\"}[$__rate_interval]) / rate(strata:drafts_offered_total{server=\"$server\"}[$__rate_interval]))",
               "legendFormat": "accepted %",
               "refId": "A",
               "range": true,
@@ -2112,8 +2112,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "100 * llamacpp:n_tokens_max{server=\"$server\"} / on(server) llm_model_context_size{server=\"$server\"}",
-              "legendFormat": "peak since start %",
+              "expr": "(100 * llamacpp:n_tokens_max{server=\"$server\"} / on(server) llm_model_context_size{server=\"$server\"}) or (100 * max_over_time(sum by (server) (llm_slot_context_tokens{server=\"$server\"})[$__range:]) / on(server) sum by (server) (llm_slot_context_size{server=\"$server\"}))",
+              "legendFormat": "peak %",
               "refId": "B",
               "range": true,
               "instant": false
