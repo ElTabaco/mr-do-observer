@@ -32,6 +32,7 @@ static targets.
 | `install-exporters.sh` | – (run once) | idempotent installer, run as root |
 | `llm-model-info.py` | `/usr/local/bin/llm-model-info` (0755) | reads llama-server `/props` + `/v1/models` + `/slots` and AMD GPU sysfs (`/sys/class/drm/card*/device`, `amd-smi static --asic` for name/arch), writes `llm_model.prom` atomically |
 | `llm-model-info.service` | `/etc/systemd/system/` (0644) | oneshot, user/group `prometheus`, `SupplementaryGroups=render video` (amd-smi), sandboxed (`ProtectSystem=strict`, `ProtectHome=yes`, `NoNewPrivileges=yes`) |
+| `10-models-dir.conf` | `/etc/systemd/system/llm-model-info.service.d/` (0644, written by the installer) | `ProtectHome=tmpfs` + `BindReadOnlyPaths=-<models dir>`: the collector sees only the model directory, read-only (GGUF header fallback); not written when no models dir is found |
 | `llm-model-info.timer` | `/etc/systemd/system/` (0644) | `OnBootSec=10s`, `OnUnitActiveSec=10s` |
 
 ### Configuration values
@@ -42,6 +43,8 @@ static targets.
 | `NGX_SHA256` | `install-exporters.sh` | `1bc0f7f811579a7505ed284e9cdcea1a454f3101da2c60877a7aaafb15fecde4` | sha256 of the amd64 `.deb` (change together with `NGX_VERSION`) |
 | `LLM_URL` | `llm-model-info` (set in the `.service`) | `http://127.0.0.1:8080` | llama-server or Strata base URL (both serve `/props`, `/v1/models`, `/slots`) |
 | `TEXTFILE_DIR` | `llm-model-info`, installer | `/var/lib/prometheus/node-exporter` | node-exporter textfile collector directory (Ubuntu package default), owner `prometheus:prometheus`, 0755 |
+| `LLM_MODELS_DIR` | installer (env) | the `.../models` or `.../huggingface/hub` root of the running engine's `/props` `model_path` (mr-r9700: `/home/mr/models`, mr-v100: `/home/mrlegion/.cache/huggingface/hub`) | directory made readable for `llm-model-info` via the drop-in |
+| `.llm_gguf_cache.json` | `TEXTFILE_DIR` (hidden, not scraped) | written by `llm-model-info` | GGUF header result, keyed by shard paths + mtime + size; re-parsed only when the model changes (~0.2-0.4 s) |
 
 Output file: `/var/lib/prometheus/node-exporter/llm_model.prom` (0644).
 
@@ -65,8 +68,11 @@ Output file: `/var/lib/prometheus/node-exporter/llm_model.prom` (0644).
 
 `llm_slot_*` are absent when llama-server runs with `--no-slots` (`/slots` disabled).
 
-`llm_model_context_train`, `llm_model_parameters` and `llm_model_size_bytes` are written only when the engine reports
-them in `/v1/models` `meta` (llama.cpp does; Strata 0.2.11 does not), so Grafana shows "No data" instead of 0.
+`llm_model_context_train`, `llm_model_parameters` and `llm_model_size_bytes` come from `/v1/models` `meta` (llama.cpp).
+Strata 0.2.11 has no `meta`, so `llm-model-info` reads them from the GGUF headers of `/props` `model_path` (all
+`-0000N-of-0000M` shards): parameters = sum of tensor elements, size = tensor data bytes, trained context =
+`<general.architecture>.context_length` — byte-identical to llama.cpp's values on both servers (2026-11-06). If the
+files are not readable the series are omitted ("No data"), never 0.
 
 AMD GPU metrics (`llm_gpu_*`, label `gpu` = index of AMD discrete GPUs; AMD cards with < 4 GiB VRAM and non-AMD cards are
 skipped, e.g. the Intel iGPU on mr-r9700). NVIDIA GPUs are not exported here — they use nvidia-gpu-exporter.

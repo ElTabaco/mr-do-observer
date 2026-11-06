@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Export the model served by llama-server as Prometheus metrics (node-exporter textfile collector).
 
-Reads llama-server /props, /v1/models and /slots and atomically writes <TEXTFILE_DIR>/llm_model.prom.
+Reads /props, /v1/models and /slots (llama-server or Strata) and atomically writes <TEXTFILE_DIR>/llm_model.prom.
+Model parameters / size / trained context come from /v1/models meta, else from the GGUF headers of /props model_path.
 Run by llm-model-info.timer every 10 s. Stdlib only.
 
 Environment:
@@ -11,6 +12,7 @@ Environment:
 import json
 import os
 import re
+import struct
 import tempfile
 import time
 import urllib.request
@@ -23,6 +25,92 @@ OUT = os.path.join(TEXTFILE_DIR, "llm_model.prom")
 def get(path):
     with urllib.request.urlopen(LLM_URL + path, timeout=10) as r:
         return json.load(r)
+
+
+def _rd(f, fmt):
+    return struct.unpack("<" + fmt, f.read(struct.calcsize("<" + fmt)))[0]
+
+
+def _rstr(f):
+    return f.read(_rd(f, "Q")).decode("utf-8", "replace")
+
+
+def _rval(f, t):
+    """Read one GGUF metadata value of type t (arrays are skipped and return None)."""
+    fixed = {0: "B", 1: "b", 2: "H", 3: "h", 4: "I", 5: "i", 6: "f", 7: "?", 10: "Q", 11: "q", 12: "d"}
+    if t in fixed:
+        return _rd(f, fixed[t])
+    if t == 8:
+        return _rstr(f)
+    if t == 9:
+        at, n = _rd(f, "I"), _rd(f, "Q")
+        if at in fixed:
+            f.seek(n * struct.calcsize("<" + fixed[at]), 1)
+        else:
+            for _ in range(n):
+                _rval(f, at)
+        return None
+    raise ValueError(f"unknown GGUF value type {t}")
+
+
+def _gguf_shard(path):
+    """(metadata dict, tensor elements, tensor data bytes) of one GGUF file - header only."""
+    with open(path, "rb") as f:
+        if f.read(4) != b"GGUF":
+            raise ValueError("not a GGUF file")
+        _rd(f, "I")
+        n_tensors, n_kv = _rd(f, "Q"), _rd(f, "Q")
+        kv = {}
+        for _ in range(n_kv):
+            k = _rstr(f)
+            kv[k] = _rval(f, _rd(f, "I"))
+        elems = 0
+        for _ in range(n_tensors):
+            _rstr(f)
+            n = 1
+            for _ in range(_rd(f, "I")):
+                n *= _rd(f, "Q")
+            f.seek(12, 1)                                   # type (u32) + offset (u64)
+            elems += n
+        align = kv.get("general.alignment") or 32
+        data_start = -(-f.tell() // align) * align
+    return kv, elems, os.path.getsize(path) - data_start
+
+
+def gguf_meta(path):
+    """n_params / size / n_ctx_train from the GGUF headers (all split shards), for engines whose
+    /v1/models has no 'meta' (Strata). Cached in TEXTFILE_DIR by path + mtime + size (headers of a
+    split 125B model take ~1 s to parse; the timer runs every 10 s). {} if the files are not readable."""
+    m = re.match(r"(.*-)(\d{5})-of-(\d{5})\.gguf$", path)
+    shards = [f"{m.group(1)}{i:05d}-of-{m.group(3)}.gguf" for i in range(1, int(m.group(3)) + 1)] if m else [path]
+    try:
+        key = [[p, os.stat(p).st_mtime_ns, os.stat(p).st_size] for p in shards]
+    except OSError:
+        return {}
+    cache = os.path.join(TEXTFILE_DIR, ".llm_gguf_cache.json")
+    try:
+        with open(cache) as f:
+            c = json.load(f)
+        if c.get("key") == key:
+            return c["meta"]
+    except (OSError, ValueError):
+        pass
+    try:
+        meta, n_params, size = {}, 0, 0
+        for i, p in enumerate(shards):
+            kv, elems, nbytes = _gguf_shard(p)
+            n_params, size = n_params + elems, size + nbytes
+            if i == 0:
+                arch = kv.get("general.architecture", "")
+                meta["n_ctx_train"] = kv.get(f"{arch}.context_length") or 0
+        meta.update(n_params=n_params, size=size)
+    except (OSError, ValueError, struct.error):
+        return {}
+    fd, tmp = tempfile.mkstemp(dir=TEXTFILE_DIR, prefix=".llm_gguf.", suffix=".tmp")
+    with os.fdopen(fd, "w") as f:
+        json.dump({"key": key, "meta": meta}, f)
+    os.replace(tmp, cache)
+    return meta
 
 
 def esc(v):
@@ -196,8 +284,10 @@ def main():
             "# TYPE llm_model_sleeping gauge",
             f"llm_model_sleeping {int(bool(props.get('is_sleeping')))}",
         ]
-        # Only what the engine reports: Strata's /v1/models has no n_ctx_train/n_params/size -> series absent
-        # ("No data" in Grafana) instead of a misleading 0.
+        # llama.cpp reports n_ctx_train/n_params/size in /v1/models meta; Strata does not -> read them from the
+        # GGUF headers (needs read access to the model dir, see the service drop-in). Unknown -> series absent.
+        if not all(meta.get(k) for k in ("n_ctx_train", "n_params", "size")) and path:
+            meta = dict(gguf_meta(path), **{k: v for k, v in meta.items() if v})
         for name, key, help_ in (("llm_model_context_train", "n_ctx_train", "Context size the model was trained for (tokens)."),
                                  ("llm_model_parameters", "n_params", "Model parameter count."),
                                  ("llm_model_size_bytes", "size", "Model weights size in bytes.")):
