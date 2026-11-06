@@ -1,0 +1,3336 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-llm-server
+  namespace: monitoring
+  labels:
+    app: grafana
+data:
+  llm-server.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "description": "LLM server system overview: served model, tokens/s, GPU and host metrics. Source: ElTabaco/mr-do-observer kubernetes/grafana/dashboard-llm-server-configmap.yml",
+      "editable": true,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "type": "row",
+          "title": "Model & status",
+          "id": 1,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "panels": []
+        },
+        {
+          "type": "stat",
+          "title": "Model (alias)",
+          "id": 2,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Alias served by llama-server (from /props via llm-model-info, refreshed every 30 s).",
+          "gridPos": {
+            "h": 4,
+            "w": 5,
+            "x": 0,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^alias$/"
+            },
+            "colorMode": "none",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "llm_model_info{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Model file",
+          "id": 3,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "GGUF file currently loaded.",
+          "gridPos": {
+            "h": 4,
+            "w": 7,
+            "x": 5,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^model_file$/"
+            },
+            "colorMode": "none",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "llm_model_info{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Quant",
+          "id": 4,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 12,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^quant$/"
+            },
+            "colorMode": "none",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "llm_model_info{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Parameters",
+          "id": 5,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 15,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "llm_model_parameters{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Weights size",
+          "id": 6,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 18,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "llm_model_size_bytes{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Context (tokens)",
+          "id": 7,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Configured context size (-c).",
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 21,
+            "y": 1
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "llm_model_context_size{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "llama.cpp build",
+          "id": 8,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 5,
+            "x": 4,
+            "y": 5
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^build$/"
+            },
+            "colorMode": "none",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "llm_model_info{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "llama-server",
+          "id": 9,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Prometheus scrape of llama-server /metrics.",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 0,
+            "y": 5
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "DOWN",
+                      "color": "red",
+                      "index": 0
+                    },
+                    "1": {
+                      "text": "UP",
+                      "color": "green",
+                      "index": 1
+                    }
+                  }
+                },
+                {
+                  "type": "special",
+                  "options": {
+                    "match": "null",
+                    "result": {
+                      "text": "NO DATA",
+                      "color": "red",
+                      "index": 2
+                    }
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "up{job=\"llm-llamacpp\",server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Host uptime",
+          "id": 10,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 5,
+            "x": 9,
+            "y": 5
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "node_time_seconds{server=\"$server\"} - node_boot_time_seconds{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Generation t/s (now)",
+          "id": 11,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Decode speed while generating (tokens / generation-seconds) over the last rate interval. Empty when idle.",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 0,
+            "y": 9
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 15
+                  },
+                  {
+                    "color": "green",
+                    "value": 30
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "rate(llamacpp:tokens_predicted_total{server=\"$server\"}[$__rate_interval]) / rate(llamacpp:tokens_predicted_seconds_total{server=\"$server\"}[$__rate_interval])",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Generation t/s (range avg)",
+          "id": 12,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Average decode speed over the selected time range (benchmark reference: 42 t/s with MTP).",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 4,
+            "y": 9
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 15
+                  },
+                  {
+                    "color": "green",
+                    "value": 30
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "increase(llamacpp:tokens_predicted_total{server=\"$server\"}[$__range]) / increase(llamacpp:tokens_predicted_seconds_total{server=\"$server\"}[$__range])",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Prompt t/s (range avg)",
+          "id": 13,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 8,
+            "y": 9
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "increase(llamacpp:prompt_tokens_total{server=\"$server\"}[$__range]) / increase(llamacpp:prompt_seconds_total{server=\"$server\"}[$__range])",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Tokens generated (range)",
+          "id": 14,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 12,
+            "y": 9
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "increase(llamacpp:tokens_predicted_total{server=\"$server\"}[$__range])",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Prompt tokens (range)",
+          "id": 15,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Prompt tokens processed, excluding tokens reused from the prompt cache.",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 16,
+            "y": 9
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "increase(llamacpp:prompt_tokens_total{server=\"$server\"}[$__range])",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "MTP acceptance (range)",
+          "id": 16,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Share of MTP draft tokens accepted by the target model.",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 20,
+            "y": 9
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 40
+                  },
+                  {
+                    "color": "green",
+                    "value": 60
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * increase(llamacpp:spec_decode_num_accepted_tokens_total{server=\"$server\"}[$__range]) / increase(llamacpp:spec_decode_num_draft_tokens_total{server=\"$server\"}[$__range])",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Requests active",
+          "id": 17,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 5,
+            "x": 14,
+            "y": 5
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "llamacpp:requests_processing{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Context peak",
+          "id": 18,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Largest sequence (prompt + generation) since llama-server start, as % of the configured context.",
+          "gridPos": {
+            "h": 4,
+            "w": 5,
+            "x": 19,
+            "y": 5
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 75
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * llamacpp:n_tokens_max{server=\"$server\"} / on(server) llm_model_context_size{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "title": "Tokens per second",
+          "id": 19,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 13
+          },
+          "panels": []
+        },
+        {
+          "type": "timeseries",
+          "title": "Tokens per second",
+          "id": 20,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Generation t/s = decode speed while generating (gaps = idle). Effective throughput = generated tokens per wall-clock second (0 when idle). Prompt t/s on the right axis. llama.cpp exposes cumulative counters, so values are averages over the rate interval (>= 1 min).",
+          "gridPos": {
+            "h": 10,
+            "w": 16,
+            "x": 0,
+            "y": 14
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "decimals": 1
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Prompt (prefill) t/s"
+                },
+                "properties": [
+                  {
+                    "id": "custom.axisPlacement",
+                    "value": "right"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Generation t/s"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "green"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Effective throughput t/s"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "blue"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Prompt (prefill) t/s"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "orange"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "rate(llamacpp:tokens_predicted_total{server=\"$server\"}[$__rate_interval]) / rate(llamacpp:tokens_predicted_seconds_total{server=\"$server\"}[$__rate_interval])",
+              "legendFormat": "Generation t/s",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "rate(llamacpp:tokens_predicted_total{server=\"$server\"}[$__rate_interval])",
+              "legendFormat": "Effective throughput t/s",
+              "refId": "B",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "rate(llamacpp:prompt_tokens_total{server=\"$server\"}[$__rate_interval]) / rate(llamacpp:prompt_seconds_total{server=\"$server\"}[$__rate_interval])",
+              "legendFormat": "Prompt (prefill) t/s",
+              "refId": "C",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "MTP draft acceptance",
+          "id": 21,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Accepted / drafted MTP tokens. Higher = bigger speed-up from speculative decoding.",
+          "gridPos": {
+            "h": 10,
+            "w": 8,
+            "x": 16,
+            "y": 14
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "max": 100,
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * rate(llamacpp:spec_decode_num_accepted_tokens_total{server=\"$server\"}[$__rate_interval]) / rate(llamacpp:spec_decode_num_draft_tokens_total{server=\"$server\"}[$__rate_interval])",
+              "legendFormat": "accepted %",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Tokens per minute",
+          "id": 22,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 24
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max",
+                "sum"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "60 * rate(llamacpp:tokens_predicted_total{server=\"$server\"}[$__rate_interval])",
+              "legendFormat": "generated",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "60 * rate(llamacpp:prompt_tokens_total{server=\"$server\"}[$__rate_interval])",
+              "legendFormat": "prompt",
+              "refId": "B",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "60 * rate(llamacpp:prompt_tokens_cached_total{server=\"$server\"}[$__rate_interval])",
+              "legendFormat": "prompt (from cache)",
+              "refId": "C",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Requests",
+          "id": 23,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 24
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "llamacpp:requests_processing{server=\"$server\"}",
+              "legendFormat": "processing",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "llamacpp:requests_deferred{server=\"$server\"}",
+              "legendFormat": "deferred (queued)",
+              "refId": "B",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "title": "GPU",
+          "id": 24,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 32
+          },
+          "panels": []
+        },
+        {
+          "type": "stat",
+          "title": "GPU",
+          "id": 25,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 5,
+            "x": 0,
+            "y": 33
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^name$/"
+            },
+            "colorMode": "none",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "nvidia_smi_gpu_info{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Driver",
+          "id": 26,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 3,
+            "x": 5,
+            "y": 33
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^driver_version$/"
+            },
+            "colorMode": "none",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "nvidia_smi_gpu_info{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true,
+              "format": "table"
+            }
+          ]
+        },
+        {
+          "type": "gauge",
+          "title": "GPU utilisation",
+          "id": 27,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 8,
+            "y": 33
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 75
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * nvidia_smi_utilization_gpu_ratio{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "gauge",
+          "title": "VRAM used",
+          "id": 28,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "The model and KV cache are preallocated, so ~93 % is normal for this server.",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 12,
+            "y": 33
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 95
+                  },
+                  {
+                    "color": "red",
+                    "value": 98
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * nvidia_smi_memory_used_bytes{server=\"$server\"} / nvidia_smi_memory_total_bytes{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "gauge",
+          "title": "GPU temperature",
+          "id": 29,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 16,
+            "y": 33
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 75
+                  },
+                  {
+                    "color": "red",
+                    "value": 85
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "nvidia_smi_temperature_gpu{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "gauge",
+          "title": "Power draw",
+          "id": 30,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 20,
+            "y": 33
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "watt",
+              "min": 0,
+              "max": 250,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 200
+                  },
+                  {
+                    "color": "red",
+                    "value": 240
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "nvidia_smi_power_draw_watts{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "GPU utilisation",
+          "id": 31,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 37
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "max": 100
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * nvidia_smi_utilization_gpu_ratio{server=\"$server\"}",
+              "legendFormat": "GPU (SM) busy %",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * nvidia_smi_utilization_memory_ratio{server=\"$server\"}",
+              "legendFormat": "memory controller busy %",
+              "refId": "B",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "VRAM",
+          "id": 32,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 37
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 0,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "nvidia_smi_memory_used_bytes{server=\"$server\"}",
+              "legendFormat": "used",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "nvidia_smi_memory_total_bytes{server=\"$server\"}",
+              "legendFormat": "total",
+              "refId": "B",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "GPU temperature",
+          "id": 33,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 45
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "nvidia_smi_temperature_gpu{server=\"$server\"}",
+              "legendFormat": "GPU °C",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "GPU power",
+          "id": 34,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 45
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "watt",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 0,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "nvidia_smi_power_draw_watts{server=\"$server\"}",
+              "legendFormat": "draw",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "nvidia_smi_enforced_power_limit_watts{server=\"$server\"}",
+              "legendFormat": "limit",
+              "refId": "B",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "GPU clocks",
+          "id": 35,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 45
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "hertz",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 0,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "nvidia_smi_clocks_current_sm_clock_hz{server=\"$server\"}",
+              "legendFormat": "SM",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "nvidia_smi_clocks_current_memory_clock_hz{server=\"$server\"}",
+              "legendFormat": "memory",
+              "refId": "B",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "title": "System",
+          "id": 36,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 53
+          },
+          "panels": []
+        },
+        {
+          "type": "gauge",
+          "title": "CPU",
+          "id": 37,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 0,
+            "y": 54
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 75
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * (1 - avg by (server) (rate(node_cpu_seconds_total{server=\"$server\",mode=\"idle\"}[$__rate_interval])))",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "gauge",
+          "title": "RAM used",
+          "id": 38,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 4,
+            "y": 54
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 75
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * (1 - node_memory_MemAvailable_bytes{server=\"$server\"} / node_memory_MemTotal_bytes{server=\"$server\"})",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Swap used",
+          "id": 39,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Swap in use. Any swap growth while benchmarking makes the benchmark invalid.",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 8,
+            "y": 54
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 104857600
+                  },
+                  {
+                    "color": "red",
+                    "value": 1073741824
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 1
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "node_memory_SwapTotal_bytes{server=\"$server\"} - node_memory_SwapFree_bytes{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "gauge",
+          "title": "Disk / used",
+          "id": 40,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 12,
+            "y": 54
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 75
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * (1 - node_filesystem_avail_bytes{server=\"$server\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{server=\"$server\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"})",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Load (1m / 16 threads)",
+          "id": 41,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 16,
+            "y": 54
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 12
+                  },
+                  {
+                    "color": "red",
+                    "value": 16
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 2
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "node_load1{server=\"$server\"}",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "CPU temperature (max)",
+          "id": 42,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 20,
+            "y": 54
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 75
+                  },
+                  {
+                    "color": "red",
+                    "value": 85
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (server) (node_hwmon_temp_celsius{server=\"$server\",chip=~\".*coretemp.*\"})",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "CPU",
+          "id": 43,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 58
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 40,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "normal",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "max": 100
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * sum by (mode) (rate(node_cpu_seconds_total{server=\"$server\",mode!=\"idle\"}[$__rate_interval])) / scalar(count(node_cpu_seconds_total{server=\"$server\",mode=\"idle\"}))",
+              "legendFormat": "{{mode}}",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Memory",
+          "id": 44,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 58
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 0,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "node_memory_MemTotal_bytes{server=\"$server\"} - node_memory_MemAvailable_bytes{server=\"$server\"}",
+              "legendFormat": "used",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "node_memory_Cached_bytes{server=\"$server\"} + node_memory_Buffers_bytes{server=\"$server\"}",
+              "legendFormat": "cache + buffers",
+              "refId": "B",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "node_memory_MemTotal_bytes{server=\"$server\"}",
+              "legendFormat": "total",
+              "refId": "C",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "node_memory_SwapTotal_bytes{server=\"$server\"} - node_memory_SwapFree_bytes{server=\"$server\"}",
+              "legendFormat": "swap used",
+              "refId": "D",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Network",
+          "id": 45,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Receive up, transmit down.",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 66
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "rate(node_network_receive_bytes_total{server=\"$server\",device!~\"lo|veth.*|docker.*|br-.*|virbr.*|lxd.*\"}[$__rate_interval])",
+              "legendFormat": "rx {{device}}",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "-rate(node_network_transmit_bytes_total{server=\"$server\",device!~\"lo|veth.*|docker.*|br-.*|virbr.*|lxd.*\"}[$__rate_interval])",
+              "legendFormat": "tx {{device}}",
+              "refId": "B",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Disk I/O",
+          "id": 46,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Read up, write down.",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 66
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "rate(node_disk_read_bytes_total{server=\"$server\",device=~\"nvme[0-9]+n[0-9]+|sd[a-z]+\"}[$__rate_interval])",
+              "legendFormat": "read {{device}}",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "-rate(node_disk_written_bytes_total{server=\"$server\",device=~\"nvme[0-9]+n[0-9]+|sd[a-z]+\"}[$__rate_interval])",
+              "legendFormat": "write {{device}}",
+              "refId": "B",
+              "range": true,
+              "instant": false
+            }
+          ]
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": [
+        "llm",
+        "llama.cpp",
+        "gpu"
+      ],
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "label": "Data source",
+            "type": "datasource",
+            "query": "prometheus",
+            "current": {
+              "selected": true,
+              "text": "Prometheus",
+              "value": "Prometheus"
+            },
+            "hide": 0,
+            "refresh": 1,
+            "options": [],
+            "includeAll": false,
+            "multi": false
+          },
+          {
+            "name": "server",
+            "label": "Server",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "query": {
+              "query": "label_values(up{job=~\"llm-.*\"}, server)",
+              "refId": "server"
+            },
+            "definition": "label_values(up{job=~\"llm-.*\"}, server)",
+            "refresh": 2,
+            "sort": 1,
+            "includeAll": false,
+            "multi": false,
+            "hide": 0,
+            "current": {},
+            "options": []
+          }
+        ]
+      },
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "LLM Server Overview",
+      "uid": "llm-server-overview",
+      "version": 1
+    }

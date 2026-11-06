@@ -105,3 +105,23 @@ data:
             target_label: __address__
           - source_labels: [__meta_kubernetes_pod_label_component]
             target_label: component
+
+      # LLM servers (outside k3s) — dashboard "LLM Servers / LLM Server Overview".
+      # Exporters installed by hosts/llm-server/install-exporters.sh. Every target
+      # carries a `server` label; the dashboard's server dropdown is built from it.
+      # Add a new LLM server by adding its targets to all jobs that apply.
+      - job_name: 'llm-node'                 # prometheus-node-exporter (+ llm_model_* textfile metrics)
+        static_configs:
+          - targets: ['192.168.0.243:9100']
+            labels:
+              server: 'mr-v100-server'
+      - job_name: 'llm-gpu-nvidia'           # nvidia_gpu_exporter (NVIDIA GPUs only)
+        static_configs:
+          - targets: ['192.168.0.243:9835']
+            labels:
+              server: 'mr-v100-server'
+      - job_name: 'llm-llamacpp'             # llama-server --metrics (llamacpp:* metrics)
+        static_configs:
+          - targets: ['192.168.0.243:8080']
+            labels:
+              server: 'mr-v100-server'
