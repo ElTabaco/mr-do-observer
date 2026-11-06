@@ -114,19 +114,20 @@ GPUINFO = f'nvidia_smi_gpu_info{{{S}}}'
 # ---------------------------------------------------------------- Model & status
 y = 0
 row("Model & status", y); y += 1
-stat("Model (alias)", 0, y, 4, 4, [tgt(INFO, instant=True, fmt="table")], field="/^alias$/", color_mode="none",
+stat("Model (alias)", 0, y, 5, 4, [tgt(INFO, instant=True, fmt="table")], field="/^alias$/", color_mode="none",
      desc="Alias served by llama-server (from /props via llm-model-info, refreshed every 30 s).")
-stat("Model file", 4, y, 6, 4, [tgt(INFO, instant=True, fmt="table")], field="/^model_file$/", color_mode="none",
+stat("Model file", 5, y, 7, 4, [tgt(INFO, instant=True, fmt="table")], field="/^model_file$/", color_mode="none",
      desc="GGUF file currently loaded.")
-stat("Quant", 10, y, 2, 4, [tgt(INFO, instant=True, fmt="table")], field="/^quant$/", color_mode="none")
-stat("Parameters", 12, y, 2, 4, [tgt(f'llm_model_parameters{{{S}}}', instant=True)], unit="short", decimals=1)
-stat("Weights size", 14, y, 2, 4, [tgt(f'llm_model_size_bytes{{{S}}}', instant=True)], unit="bytes", decimals=1)
-stat("Context", 16, y, 2, 4, [tgt(f'llm_model_context_size{{{S}}}', instant=True)], unit="short",
+stat("Quant", 12, y, 3, 4, [tgt(INFO, instant=True, fmt="table")], field="/^quant$/", color_mode="none")
+stat("Parameters", 15, y, 3, 4, [tgt(f'llm_model_parameters{{{S}}}', instant=True)], unit="short", decimals=1)
+stat("Weights size", 18, y, 3, 4, [tgt(f'llm_model_size_bytes{{{S}}}', instant=True)], unit="bytes", decimals=1)
+stat("Context (tokens)", 21, y, 3, 4, [tgt(f'llm_model_context_size{{{S}}}', instant=True)], unit="none",
      desc="Configured context size (-c).")
-stat("llama.cpp build", 18, y, 2, 4, [tgt(INFO, instant=True, fmt="table")], field="/^build$/", color_mode="none")
-stat("llama-server", 20, y, 2, 4, [tgt(f'up{{job="llm-llamacpp",{S}}}', instant=True)], mappings=UPDOWN,
+y += 4
+stat("llama.cpp build", 4, y, 5, 4, [tgt(INFO, instant=True, fmt="table")], field="/^build$/", color_mode="none")
+stat("llama-server", 0, y, 4, 4, [tgt(f'up{{job="llm-llamacpp",{S}}}', instant=True)], mappings=UPDOWN,
      steps=RED0, color_mode="background", desc="Prometheus scrape of llama-server /metrics.")
-stat("Host uptime", 22, y, 2, 4, [tgt(f'node_time_seconds{{{S}}} - node_boot_time_seconds{{{S}}}', instant=True)],
+stat("Host uptime", 9, y, 5, 4, [tgt(f'node_time_seconds{{{S}}} - node_boot_time_seconds{{{S}}}', instant=True)],
      unit="s", decimals=0)
 y += 4
 stat("Generation t/s (now)", 0, y, 4, 4, [tgt(GEN_TPS, instant=True)], unit="none", decimals=1, graph=False,
@@ -139,23 +140,23 @@ stat("Generation t/s (range avg)", 4, y, 4, 4,
      decimals=1, steps=[{"color": "red", "value": None}, {"color": "orange", "value": 15},
                         {"color": "green", "value": 30}],
      desc="Average decode speed over the selected time range (benchmark reference: 42 t/s with MTP).")
-stat("Prompt t/s (range avg)", 8, y, 3, 4,
+stat("Prompt t/s (range avg)", 8, y, 4, 4,
      [tgt(f'increase(llamacpp:prompt_tokens_total{{{S}}}[$__range]) / '
           f'increase(llamacpp:prompt_seconds_total{{{S}}}[$__range])', instant=True)], decimals=0)
-stat("Tokens generated (range)", 11, y, 3, 4,
+stat("Tokens generated (range)", 12, y, 4, 4,
      [tgt(f'increase(llamacpp:tokens_predicted_total{{{S}}}[$__range])', instant=True)], unit="short", decimals=1)
-stat("Prompt tokens (range)", 14, y, 3, 4,
+stat("Prompt tokens (range)", 16, y, 4, 4,
      [tgt(f'increase(llamacpp:prompt_tokens_total{{{S}}}[$__range])', instant=True)], unit="short", decimals=1,
      desc="Prompt tokens processed, excluding tokens reused from the prompt cache.")
-stat("MTP acceptance (range)", 17, y, 3, 4,
+stat("MTP acceptance (range)", 20, y, 4, 4,
      [tgt(f'100 * increase(llamacpp:spec_decode_num_accepted_tokens_total{{{S}}}[$__range]) / '
           f'increase(llamacpp:spec_decode_num_draft_tokens_total{{{S}}}[$__range])', instant=True)],
      unit="percent", decimals=0,
      steps=[{"color": "red", "value": None}, {"color": "orange", "value": 40}, {"color": "green", "value": 60}],
      desc="Share of MTP draft tokens accepted by the target model.")
-stat("Requests active", 20, y, 2, 4, [tgt(f'llamacpp:requests_processing{{{S}}}', instant=True)],
+stat("Requests active", 14, y - 4, 5, 4, [tgt(f'llamacpp:requests_processing{{{S}}}', instant=True)],
      steps=[{"color": "text", "value": None}, {"color": "green", "value": 1}])
-stat("Context peak", 22, y, 2, 4,
+stat("Context peak", 19, y - 4, 5, 4,
      [tgt(f'100 * llamacpp:n_tokens_max{{{S}}} / on(server) llm_model_context_size{{{S}}}', instant=True)],
      unit="percent", decimals=0, steps=PCT,
      desc="Largest sequence (prompt + generation) since llama-server start, as % of the configured context.")

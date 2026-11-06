@@ -41,7 +41,7 @@ data:
           "description": "Alias served by llama-server (from /props via llm-model-info, refreshed every 30 s).",
           "gridPos": {
             "h": 4,
-            "w": 4,
+            "w": 5,
             "x": 0,
             "y": 1
           },
@@ -106,8 +106,8 @@ data:
           "description": "GGUF file currently loaded.",
           "gridPos": {
             "h": 4,
-            "w": 6,
-            "x": 4,
+            "w": 7,
+            "x": 5,
             "y": 1
           },
           "fieldConfig": {
@@ -171,8 +171,8 @@ data:
           "description": "",
           "gridPos": {
             "h": 4,
-            "w": 2,
-            "x": 10,
+            "w": 3,
+            "x": 12,
             "y": 1
           },
           "fieldConfig": {
@@ -236,8 +236,8 @@ data:
           "description": "",
           "gridPos": {
             "h": 4,
-            "w": 2,
-            "x": 12,
+            "w": 3,
+            "x": 15,
             "y": 1
           },
           "fieldConfig": {
@@ -301,8 +301,8 @@ data:
           "description": "",
           "gridPos": {
             "h": 4,
-            "w": 2,
-            "x": 14,
+            "w": 3,
+            "x": 18,
             "y": 1
           },
           "fieldConfig": {
@@ -357,7 +357,7 @@ data:
         },
         {
           "type": "stat",
-          "title": "Context",
+          "title": "Context (tokens)",
           "id": 7,
           "datasource": {
             "type": "prometheus",
@@ -366,13 +366,13 @@ data:
           "description": "Configured context size (-c).",
           "gridPos": {
             "h": 4,
-            "w": 2,
-            "x": 16,
+            "w": 3,
+            "x": 21,
             "y": 1
           },
           "fieldConfig": {
             "defaults": {
-              "unit": "short",
+              "unit": "none",
               "mappings": [],
               "thresholds": {
                 "mode": "absolute",
@@ -430,9 +430,9 @@ data:
           "description": "",
           "gridPos": {
             "h": 4,
-            "w": 2,
-            "x": 18,
-            "y": 1
+            "w": 5,
+            "x": 4,
+            "y": 5
           },
           "fieldConfig": {
             "defaults": {
@@ -495,9 +495,9 @@ data:
           "description": "Prometheus scrape of llama-server /metrics.",
           "gridPos": {
             "h": 4,
-            "w": 2,
-            "x": 20,
-            "y": 1
+            "w": 4,
+            "x": 0,
+            "y": 5
           },
           "fieldConfig": {
             "defaults": {
@@ -590,9 +590,9 @@ data:
           "description": "",
           "gridPos": {
             "h": 4,
-            "w": 2,
-            "x": 22,
-            "y": 1
+            "w": 5,
+            "x": 9,
+            "y": 5
           },
           "fieldConfig": {
             "defaults": {
@@ -657,7 +657,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 0,
-            "y": 5
+            "y": 9
           },
           "fieldConfig": {
             "defaults": {
@@ -730,7 +730,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 4,
-            "y": 5
+            "y": 9
           },
           "fieldConfig": {
             "defaults": {
@@ -801,9 +801,9 @@ data:
           "description": "",
           "gridPos": {
             "h": 4,
-            "w": 3,
+            "w": 4,
             "x": 8,
-            "y": 5
+            "y": 9
           },
           "fieldConfig": {
             "defaults": {
@@ -866,9 +866,9 @@ data:
           "description": "",
           "gridPos": {
             "h": 4,
-            "w": 3,
-            "x": 11,
-            "y": 5
+            "w": 4,
+            "x": 12,
+            "y": 9
           },
           "fieldConfig": {
             "defaults": {
@@ -931,9 +931,9 @@ data:
           "description": "Prompt tokens processed, excluding tokens reused from the prompt cache.",
           "gridPos": {
             "h": 4,
-            "w": 3,
-            "x": 14,
-            "y": 5
+            "w": 4,
+            "x": 16,
+            "y": 9
           },
           "fieldConfig": {
             "defaults": {
@@ -996,9 +996,9 @@ data:
           "description": "Share of MTP draft tokens accepted by the target model.",
           "gridPos": {
             "h": 4,
-            "w": 3,
-            "x": 17,
-            "y": 5
+            "w": 4,
+            "x": 20,
+            "y": 9
           },
           "fieldConfig": {
             "defaults": {
@@ -1069,8 +1069,8 @@ data:
           "description": "",
           "gridPos": {
             "h": 4,
-            "w": 2,
-            "x": 20,
+            "w": 5,
+            "x": 14,
             "y": 5
           },
           "fieldConfig": {
@@ -1137,8 +1137,8 @@ data:
           "description": "Largest sequence (prompt + generation) since llama-server start, as % of the configured context.",
           "gridPos": {
             "h": 4,
-            "w": 2,
-            "x": 22,
+            "w": 5,
+            "x": 19,
             "y": 5
           },
           "fieldConfig": {
@@ -1208,7 +1208,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 9
+            "y": 13
           },
           "panels": []
         },
@@ -1225,7 +1225,7 @@ data:
             "h": 10,
             "w": 16,
             "x": 0,
-            "y": 10
+            "y": 14
           },
           "fieldConfig": {
             "defaults": {
@@ -1383,7 +1383,7 @@ data:
             "h": 10,
             "w": 8,
             "x": 16,
-            "y": 10
+            "y": 14
           },
           "fieldConfig": {
             "defaults": {
@@ -1462,7 +1462,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 20
+            "y": 24
           },
           "fieldConfig": {
             "defaults": {
@@ -1561,7 +1561,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 20
+            "y": 24
           },
           "fieldConfig": {
             "defaults": {
@@ -1645,7 +1645,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 28
+            "y": 32
           },
           "panels": []
         },
@@ -1662,7 +1662,7 @@ data:
             "h": 4,
             "w": 5,
             "x": 0,
-            "y": 29
+            "y": 33
           },
           "fieldConfig": {
             "defaults": {
@@ -1727,7 +1727,7 @@ data:
             "h": 4,
             "w": 3,
             "x": 5,
-            "y": 29
+            "y": 33
           },
           "fieldConfig": {
             "defaults": {
@@ -1792,7 +1792,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 8,
-            "y": 29
+            "y": 33
           },
           "fieldConfig": {
             "defaults": {
@@ -1860,7 +1860,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 29
+            "y": 33
           },
           "fieldConfig": {
             "defaults": {
@@ -1928,7 +1928,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 29
+            "y": 33
           },
           "fieldConfig": {
             "defaults": {
@@ -1996,7 +1996,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 29
+            "y": 33
           },
           "fieldConfig": {
             "defaults": {
@@ -2064,7 +2064,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 33
+            "y": 37
           },
           "fieldConfig": {
             "defaults": {
@@ -2153,7 +2153,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 33
+            "y": 37
           },
           "fieldConfig": {
             "defaults": {
@@ -2241,7 +2241,7 @@ data:
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 41
+            "y": 45
           },
           "fieldConfig": {
             "defaults": {
@@ -2316,7 +2316,7 @@ data:
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 41
+            "y": 45
           },
           "fieldConfig": {
             "defaults": {
@@ -2403,7 +2403,7 @@ data:
             "h": 8,
             "w": 8,
             "x": 16,
-            "y": 41
+            "y": 45
           },
           "fieldConfig": {
             "defaults": {
@@ -2486,7 +2486,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 49
+            "y": 53
           },
           "panels": []
         },
@@ -2503,7 +2503,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 0,
-            "y": 50
+            "y": 54
           },
           "fieldConfig": {
             "defaults": {
@@ -2571,7 +2571,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 4,
-            "y": 50
+            "y": 54
           },
           "fieldConfig": {
             "defaults": {
@@ -2639,7 +2639,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 8,
-            "y": 50
+            "y": 54
           },
           "fieldConfig": {
             "defaults": {
@@ -2712,7 +2712,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 50
+            "y": 54
           },
           "fieldConfig": {
             "defaults": {
@@ -2780,7 +2780,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 50
+            "y": 54
           },
           "fieldConfig": {
             "defaults": {
@@ -2853,7 +2853,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 50
+            "y": 54
           },
           "fieldConfig": {
             "defaults": {
@@ -2926,7 +2926,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 54
+            "y": 58
           },
           "fieldConfig": {
             "defaults": {
@@ -3004,7 +3004,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 54
+            "y": 58
           },
           "fieldConfig": {
             "defaults": {
@@ -3114,7 +3114,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 62
+            "y": 66
           },
           "fieldConfig": {
             "defaults": {
@@ -3201,7 +3201,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 62
+            "y": 66
           },
           "fieldConfig": {
             "defaults": {
