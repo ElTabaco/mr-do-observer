@@ -2189,7 +2189,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "nvidia_smi_gpu_info{server=\"$server\"}",
+              "expr": "nvidia_smi_gpu_info{server=\"$server\"} or llm_gpu_info{server=\"$server\"}",
               "legendFormat": "",
               "refId": "A",
               "range": false,
@@ -2254,7 +2254,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "nvidia_smi_gpu_info{server=\"$server\"}",
+              "expr": "nvidia_smi_gpu_info{server=\"$server\"} or llm_gpu_info{server=\"$server\"}",
               "legendFormat": "",
               "refId": "A",
               "range": false,
@@ -2323,7 +2323,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "100 * nvidia_smi_utilization_gpu_ratio{server=\"$server\"}",
+              "expr": "100 * (nvidia_smi_utilization_gpu_ratio{server=\"$server\"}) or (llm_gpu_busy_ratio{server=\"$server\"})",
               "legendFormat": "",
               "refId": "A",
               "range": false,
@@ -2339,7 +2339,7 @@ data:
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "The model and KV cache are preallocated, so ~93 % is normal for this server.",
+          "description": "llama.cpp preallocates model and KV cache, so a high, flat value (90 %+) is normal.",
           "gridPos": {
             "h": 4,
             "w": 4,
@@ -2391,7 +2391,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "100 * nvidia_smi_memory_used_bytes{server=\"$server\"} / nvidia_smi_memory_total_bytes{server=\"$server\"}",
+              "expr": "100 * (nvidia_smi_memory_used_bytes{server=\"$server\"} / nvidia_smi_memory_total_bytes{server=\"$server\"}) or (llm_gpu_memory_used_bytes{server=\"$server\"} / llm_gpu_memory_total_bytes{server=\"$server\"})",
               "legendFormat": "",
               "refId": "A",
               "range": false,
@@ -2459,7 +2459,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "nvidia_smi_temperature_gpu{server=\"$server\"}",
+              "expr": "(nvidia_smi_temperature_gpu{server=\"$server\"}) or (llm_gpu_temperature_celsius{server=\"$server\",sensor=\"edge\"})",
               "legendFormat": "",
               "refId": "A",
               "range": false,
@@ -2469,13 +2469,13 @@ data:
         },
         {
           "type": "gauge",
-          "title": "Power draw",
+          "title": "Power (% of limit)",
           "id": 37,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "description": "",
+          "description": "GPU power draw as % of the card's power limit (watts: GPU power panel below).",
           "gridPos": {
             "h": 4,
             "w": 4,
@@ -2484,9 +2484,9 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "unit": "watt",
+              "unit": "percent",
               "min": 0,
-              "max": 250,
+              "max": 100,
               "color": {
                 "mode": "thresholds"
               },
@@ -2499,11 +2499,11 @@ data:
                   },
                   {
                     "color": "orange",
-                    "value": 200
+                    "value": 80
                   },
                   {
                     "color": "red",
-                    "value": 240
+                    "value": 95
                   }
                 ]
               }
@@ -2527,7 +2527,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "nvidia_smi_power_draw_watts{server=\"$server\"}",
+              "expr": "100 * (nvidia_smi_power_draw_watts{server=\"$server\"} / nvidia_smi_enforced_power_limit_watts{server=\"$server\"}) or (llm_gpu_power_draw_watts{server=\"$server\"} / llm_gpu_power_limit_watts{server=\"$server\"})",
               "legendFormat": "",
               "refId": "A",
               "range": false,
@@ -2605,8 +2605,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "100 * nvidia_smi_utilization_gpu_ratio{server=\"$server\"}",
-              "legendFormat": "GPU (SM) busy %",
+              "expr": "100 * (nvidia_smi_utilization_gpu_ratio{server=\"$server\"}) or (llm_gpu_busy_ratio{server=\"$server\"})",
+              "legendFormat": "GPU busy %",
               "refId": "A",
               "range": true,
               "instant": false
@@ -2616,7 +2616,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "100 * nvidia_smi_utilization_memory_ratio{server=\"$server\"}",
+              "expr": "100 * (nvidia_smi_utilization_memory_ratio{server=\"$server\"}) or (llm_gpu_memory_busy_ratio{server=\"$server\"})",
               "legendFormat": "memory controller busy %",
               "refId": "B",
               "range": true,
@@ -2693,7 +2693,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "nvidia_smi_memory_used_bytes{server=\"$server\"}",
+              "expr": "(nvidia_smi_memory_used_bytes{server=\"$server\"}) or (llm_gpu_memory_used_bytes{server=\"$server\"})",
               "legendFormat": "used",
               "refId": "A",
               "range": true,
@@ -2704,7 +2704,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "nvidia_smi_memory_total_bytes{server=\"$server\"}",
+              "expr": "(nvidia_smi_memory_total_bytes{server=\"$server\"}) or (llm_gpu_memory_total_bytes{server=\"$server\"})",
               "legendFormat": "total",
               "refId": "B",
               "range": true,
@@ -2779,8 +2779,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "nvidia_smi_temperature_gpu{server=\"$server\"}",
-              "legendFormat": "GPU °C",
+              "expr": "label_replace(nvidia_smi_temperature_gpu{server=\"$server\"}, \"sensor\", \"gpu\", \"\", \"\") or llm_gpu_temperature_celsius{server=\"$server\"}",
+              "legendFormat": "{{sensor}} °C",
               "refId": "A",
               "range": true,
               "instant": false
@@ -2855,7 +2855,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "nvidia_smi_power_draw_watts{server=\"$server\"}",
+              "expr": "(nvidia_smi_power_draw_watts{server=\"$server\"}) or (llm_gpu_power_draw_watts{server=\"$server\"})",
               "legendFormat": "draw",
               "refId": "A",
               "range": true,
@@ -2866,7 +2866,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "nvidia_smi_enforced_power_limit_watts{server=\"$server\"}",
+              "expr": "(nvidia_smi_enforced_power_limit_watts{server=\"$server\"}) or (llm_gpu_power_limit_watts{server=\"$server\"})",
               "legendFormat": "limit",
               "refId": "B",
               "range": true,
@@ -2942,8 +2942,8 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "nvidia_smi_clocks_current_sm_clock_hz{server=\"$server\"}",
-              "legendFormat": "SM",
+              "expr": "(nvidia_smi_clocks_current_sm_clock_hz{server=\"$server\"}) or (llm_gpu_clock_hz{server=\"$server\",clock=\"sm\"})",
+              "legendFormat": "SM / graphics",
               "refId": "A",
               "range": true,
               "instant": false
@@ -2953,7 +2953,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "nvidia_smi_clocks_current_memory_clock_hz{server=\"$server\"}",
+              "expr": "(nvidia_smi_clocks_current_memory_clock_hz{server=\"$server\"}) or (llm_gpu_clock_hz{server=\"$server\",clock=\"memory\"})",
               "legendFormat": "memory",
               "refId": "B",
               "range": true,

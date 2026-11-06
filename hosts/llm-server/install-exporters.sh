@@ -6,8 +6,8 @@
 #
 # Installs:
 #   prometheus-node-exporter (apt)      :9100  host CPU/RAM/disk/net + textfile collector
-#   nvidia-gpu-exporter      (GitHub)   :9835  GPU util/VRAM/temp/power/clocks via nvidia-smi
-#   llm-model-info.timer     (local)           writes llm_model.prom every 30 s from llama-server /props
+#   nvidia-gpu-exporter      (GitHub)   :9835  NVIDIA only: GPU util/VRAM/temp/power/clocks via nvidia-smi
+#   llm-model-info.timer     (local)           writes llm_model.prom every 10 s (/props, /slots, AMD GPU sysfs)
 set -euo pipefail
 
 NGX_VERSION="${NGX_VERSION:-1.17.0}"
@@ -22,23 +22,29 @@ echo "== node-exporter"
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends prometheus-node-exporter
 install -d -o prometheus -g prometheus -m 0755 "$TEXTFILE_DIR"
 
-echo "== nvidia-gpu-exporter ${NGX_VERSION}"
-if [ "$(dpkg-query -W -f='${Version}' nvidia-gpu-exporter 2>/dev/null || true)" != "$NGX_VERSION" ]; then
-  deb="$(mktemp --suffix=.deb)"
-  curl -fsSL -o "$deb" "$NGX_URL"
-  echo "${NGX_SHA256}  ${deb}" | sha256sum -c -
-  dpkg -i "$deb"
-  rm -f "$deb"
+if command -v nvidia-smi >/dev/null 2>&1; then
+  echo "== nvidia-gpu-exporter ${NGX_VERSION} (NVIDIA GPU found)"
+  if [ "$(dpkg-query -W -f='${Version}' nvidia-gpu-exporter 2>/dev/null || true)" != "$NGX_VERSION" ]; then
+    deb="$(mktemp --suffix=.deb)"
+    curl -fsSL -o "$deb" "$NGX_URL"
+    echo "${NGX_SHA256}  ${deb}" | sha256sum -c -
+    dpkg -i "$deb"
+    rm -f "$deb"
+  fi
+  GPU_UNITS=nvidia_gpu_exporter.service
+else
+  echo "== no nvidia-smi: skipping nvidia-gpu-exporter (AMD GPUs are exported by llm-model-info as llm_gpu_*)"
+  GPU_UNITS=""
 fi
 
 echo "== llm-model-info"
 install -m 0755 "$HERE/llm-model-info.py" /usr/local/bin/llm-model-info
 install -m 0644 "$HERE/llm-model-info.service" "$HERE/llm-model-info.timer" /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now prometheus-node-exporter.service nvidia_gpu_exporter.service llm-model-info.timer
+systemctl enable --now prometheus-node-exporter.service $GPU_UNITS llm-model-info.timer
 systemctl start llm-model-info.service
 
 echo "== status"
-systemctl is-active prometheus-node-exporter nvidia_gpu_exporter llm-model-info.timer llama-server
+systemctl is-active prometheus-node-exporter $GPU_UNITS llm-model-info.timer llama-server || true
 cat /etc/default/prometheus-node-exporter 2>/dev/null | grep -v '^#' | grep -v '^$' || true
 ls -l "$TEXTFILE_DIR"
