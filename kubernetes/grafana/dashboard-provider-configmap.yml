@@ -29,3 +29,13 @@ data:
         allowUiUpdates: true
         options:
           path: /var/lib/grafana/dashboards/metallb
+      - name: 'llm-servers'
+        orgId: 1
+        folder: 'LLM Servers'
+        type: file
+        disableDeletion: false
+        editable: true
+        updateIntervalSeconds: 30
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards/llm-servers

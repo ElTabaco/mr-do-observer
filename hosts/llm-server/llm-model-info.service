@@ -1,0 +1,16 @@
+[Unit]
+Description=Export the llama-server model info for node-exporter (textfile collector)
+After=network-online.target llama-server.service
+
+[Service]
+Type=oneshot
+Environment=LLM_URL=http://127.0.0.1:8080
+Environment=TEXTFILE_DIR=/var/lib/prometheus/node-exporter
+ExecStart=/usr/local/bin/llm-model-info
+User=prometheus
+Group=prometheus
+ReadWritePaths=/var/lib/prometheus/node-exporter
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes

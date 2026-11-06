@@ -56,6 +56,9 @@ spec:
             - name: dashboard-metallb
               mountPath: /var/lib/grafana/dashboards/metallb
               readOnly: true
+            - name: dashboard-llm-server
+              mountPath: /var/lib/grafana/dashboards/llm-servers
+              readOnly: true
       volumes:
         - name: grafana-pvc-data
           persistentVolumeClaim:
@@ -72,3 +75,6 @@ spec:
         - name: dashboard-metallb
           configMap:
             name: grafana-dashboard-metallb
+        - name: dashboard-llm-server
+          configMap:
+            name: grafana-dashboard-llm-server
