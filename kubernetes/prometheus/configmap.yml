@@ -110,12 +110,15 @@ data:
       # Exporters installed by hosts/llm-server/install-exporters.sh. Every target
       # carries a `server` label; the dashboard's server dropdown is built from it.
       # Add a new LLM server by adding its targets to all jobs that apply.
-      - job_name: 'llm-node'                 # prometheus-node-exporter (+ llm_model_* textfile metrics)
+      - job_name: 'llm-node'                 # prometheus-node-exporter (+ llm_model_*/llm_slot_*/llm_gpu_* textfile metrics)
         static_configs:
           - targets: ['192.168.0.243:9100']
             labels:
               server: 'mr-v100-server'
-      - job_name: 'llm-gpu-nvidia'           # nvidia_gpu_exporter (NVIDIA GPUs only)
+          - targets: ['192.168.0.242:9100']
+            labels:
+              server: 'mr-r9700-server'
+      - job_name: 'llm-gpu-nvidia'           # nvidia_gpu_exporter (NVIDIA GPUs only; AMD GPUs come via llm-node as llm_gpu_*)
         static_configs:
           - targets: ['192.168.0.243:9835']
             labels:
@@ -125,3 +128,6 @@ data:
           - targets: ['192.168.0.243:8080']
             labels:
               server: 'mr-v100-server'
+          - targets: ['192.168.0.242:8080']
+            labels:
+              server: 'mr-r9700-server'

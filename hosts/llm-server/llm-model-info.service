@@ -9,6 +9,8 @@ Environment=TEXTFILE_DIR=/var/lib/prometheus/node-exporter
 ExecStart=/usr/local/bin/llm-model-info
 User=prometheus
 Group=prometheus
+# render/video: amd-smi and amdgpu sysfs on AMD hosts (harmless elsewhere)
+SupplementaryGroups=render video
 ReadWritePaths=/var/lib/prometheus/node-exporter
 ProtectSystem=strict
 ProtectHome=yes

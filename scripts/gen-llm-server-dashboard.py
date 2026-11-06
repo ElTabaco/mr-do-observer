@@ -109,7 +109,12 @@ THRU = f'rate(llamacpp:tokens_predicted_total{{{S}}}[{RI}])'
 MTP = (f'100 * rate(llamacpp:spec_decode_num_accepted_tokens_total{{{S}}}[{RI}]) / '
        f'rate(llamacpp:spec_decode_num_draft_tokens_total{{{S}}}[{RI}])')
 INFO = f'llm_model_info{{{S}}}'
-GPUINFO = f'nvidia_smi_gpu_info{{{S}}}'
+GPUINFO = f'nvidia_smi_gpu_info{{{S}}} or llm_gpu_info{{{S}}}'
+
+
+def g(nv, amd):
+    """Vendor-neutral GPU expression: NVIDIA exporter metric, else the llm_gpu_* (AMD sysfs) metric."""
+    return f'({nv}) or ({amd})'
 
 # ---------------------------------------------------------------- Model & status
 y = 0
@@ -221,35 +226,40 @@ row("GPU", y); y += 1
 stat("GPU", 0, y, 5, 4, [tgt(GPUINFO, instant=True, fmt="table")], field="/^name$/", color_mode="none")
 stat("Driver", 5, y, 3, 4, [tgt(GPUINFO, instant=True, fmt="table")], field="/^driver_version$/",
      color_mode="none")
-gauge("GPU utilisation", 8, y, 4, 4, [tgt(f'100 * nvidia_smi_utilization_gpu_ratio{{{S}}}', instant=True)])
-gauge("VRAM used", 12, y, 4, 4, [tgt(f'100 * nvidia_smi_memory_used_bytes{{{S}}} / '
-                                     f'nvidia_smi_memory_total_bytes{{{S}}}', instant=True)],
+gauge("GPU utilisation", 8, y, 4, 4, [tgt('100 * ' + g(f'nvidia_smi_utilization_gpu_ratio{{{S}}}', f'llm_gpu_busy_ratio{{{S}}}'), instant=True)])
+gauge("VRAM used", 12, y, 4, 4, [tgt('100 * ' + g(f'nvidia_smi_memory_used_bytes{{{S}}} / nvidia_smi_memory_total_bytes{{{S}}}',
+                                                       f'llm_gpu_memory_used_bytes{{{S}}} / llm_gpu_memory_total_bytes{{{S}}}'),
+                                     instant=True)],
       steps=[{"color": "green", "value": None}, {"color": "orange", "value": 95}, {"color": "red", "value": 98}],
-      desc="The model and KV cache are preallocated, so ~93 % is normal for this server.")
-gauge("GPU temperature", 16, y, 4, 4, [tgt(f'nvidia_smi_temperature_gpu{{{S}}}', instant=True)],
+      desc="llama.cpp preallocates model and KV cache, so a high, flat value (90 %+) is normal.")
+gauge("GPU temperature", 16, y, 4, 4, [tgt(g(f'nvidia_smi_temperature_gpu{{{S}}}', f'llm_gpu_temperature_celsius{{{S},sensor="edge"}}'), instant=True)],
       unit="celsius", mx=100, steps=TEMP)
-gauge("Power draw", 20, y, 4, 4, [tgt(f'nvidia_smi_power_draw_watts{{{S}}}', instant=True)], unit="watt",
-      mx=250, steps=[{"color": "green", "value": None}, {"color": "orange", "value": 200},
-                     {"color": "red", "value": 240}])
+gauge("Power (% of limit)", 20, y, 4, 4,
+      [tgt('100 * ' + g(f'nvidia_smi_power_draw_watts{{{S}}} / nvidia_smi_enforced_power_limit_watts{{{S}}}',
+                        f'llm_gpu_power_draw_watts{{{S}}} / llm_gpu_power_limit_watts{{{S}}}'), instant=True)],
+      steps=[{"color": "green", "value": None}, {"color": "orange", "value": 80}, {"color": "red", "value": 95}],
+      desc="GPU power draw as % of the card's power limit (watts: GPU power panel below).")
 y += 4
 ts("GPU utilisation", 0, y, 12, 8, [
-    tgt(f'100 * nvidia_smi_utilization_gpu_ratio{{{S}}}', "GPU (SM) busy %", "A"),
-    tgt(f'100 * nvidia_smi_utilization_memory_ratio{{{S}}}', "memory controller busy %", "B"),
+    tgt('100 * ' + g(f'nvidia_smi_utilization_gpu_ratio{{{S}}}', f'llm_gpu_busy_ratio{{{S}}}'), "GPU busy %", "A"),
+    tgt('100 * ' + g(f'nvidia_smi_utilization_memory_ratio{{{S}}}', f'llm_gpu_memory_busy_ratio{{{S}}}'),
+        "memory controller busy %", "B"),
 ], unit="percent", mn=0, mx=100)
 ts("VRAM", 12, y, 12, 8, [
-    tgt(f'nvidia_smi_memory_used_bytes{{{S}}}', "used", "A"),
-    tgt(f'nvidia_smi_memory_total_bytes{{{S}}}', "total", "B"),
+    tgt(g(f'nvidia_smi_memory_used_bytes{{{S}}}', f'llm_gpu_memory_used_bytes{{{S}}}'), "used", "A"),
+    tgt(g(f'nvidia_smi_memory_total_bytes{{{S}}}', f'llm_gpu_memory_total_bytes{{{S}}}'), "total", "B"),
 ], unit="bytes", mn=0, fill=0)
 y += 8
-ts("GPU temperature", 0, y, 8, 8, [tgt(f'nvidia_smi_temperature_gpu{{{S}}}', "GPU °C", "A")],
+ts("GPU temperature", 0, y, 8, 8, [tgt(f'label_replace(nvidia_smi_temperature_gpu{{{S}}}, "sensor", "gpu", "", "") or '
+                                         f'llm_gpu_temperature_celsius{{{S}}}', "{{sensor}} °C", "A")],
    unit="celsius", legend_calcs=("mean", "max"))
 ts("GPU power", 8, y, 8, 8, [
-    tgt(f'nvidia_smi_power_draw_watts{{{S}}}', "draw", "A"),
-    tgt(f'nvidia_smi_enforced_power_limit_watts{{{S}}}', "limit", "B"),
+    tgt(g(f'nvidia_smi_power_draw_watts{{{S}}}', f'llm_gpu_power_draw_watts{{{S}}}'), "draw", "A"),
+    tgt(g(f'nvidia_smi_enforced_power_limit_watts{{{S}}}', f'llm_gpu_power_limit_watts{{{S}}}'), "limit", "B"),
 ], unit="watt", mn=0, fill=0, legend_calcs=("mean", "max"))
 ts("GPU clocks", 16, y, 8, 8, [
-    tgt(f'nvidia_smi_clocks_current_sm_clock_hz{{{S}}}', "SM", "A"),
-    tgt(f'nvidia_smi_clocks_current_memory_clock_hz{{{S}}}', "memory", "B"),
+    tgt(g(f'nvidia_smi_clocks_current_sm_clock_hz{{{S}}}', f'llm_gpu_clock_hz{{{S},clock="sm"}}'), "SM / graphics", "A"),
+    tgt(g(f'nvidia_smi_clocks_current_memory_clock_hz{{{S}}}', f'llm_gpu_clock_hz{{{S},clock="memory"}}'), "memory", "B"),
 ], unit="hertz", mn=0, fill=0, legend_calcs=("mean", "max"))
 y += 8
 

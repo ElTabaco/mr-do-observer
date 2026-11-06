@@ -59,6 +59,102 @@ def slot_metrics():
     return out
 
 
+def amd_gpu_metrics():
+    """Vendor-neutral llm_gpu_* metrics for AMD discrete GPUs from amdgpu sysfs (NVIDIA uses nvidia_gpu_exporter).
+
+    Integrated GPUs and non-AMD cards are skipped. Name/arch from `amd-smi static --asic` when available.
+    """
+    import glob
+    import subprocess
+
+    def rds(path):
+        try:
+            with open(path) as f:
+                return f.read().strip()
+        except OSError:
+            return None
+
+    def rd(path):
+        try:
+            return float(rds(path) or "")
+        except ValueError:
+            return None
+
+    asic = {}
+    try:
+        out = subprocess.run(["amd-smi", "static", "--asic", "--json"], capture_output=True, text=True, timeout=5)
+        for g in json.loads(out.stdout).get("gpu_data", []):
+            a = g.get("asic") or {}
+            asic[str(a.get("device_id", "")).lower()] = a
+    except Exception:
+        pass
+    series = {k: [] for k in ("info", "busy", "membusy", "used", "total", "temp", "power", "cap", "clock", "fan")}
+    idx = 0
+    for card in sorted(glob.glob("/sys/class/drm/card[0-9]*")):
+        dev = os.path.join(card, "device")
+        if not re.fullmatch(r"card\d+", os.path.basename(card)) or rds(f"{dev}/vendor") != "0x1002":
+            continue
+        total = rd(f"{dev}/mem_info_vram_total")
+        if not total or total < 4 * 2**30:  # skip APUs / iGPUs (small carve-out)
+            continue
+        gpu = f'gpu="{idx}"'
+        idx += 1
+        devid = rds(f"{dev}/device") or ""
+        a = asic.get(devid.lower(), {})
+        name = a.get("market_name") or f"AMD {devid}"
+        series["info"].append(f'llm_gpu_info{{{gpu},name="{esc(name)}",driver_version="amdgpu {esc(os.uname().release)}",'
+                              f'arch="{esc(a.get("target_graphics_version", ""))}",'
+                              f'pci="{esc(os.path.basename(os.path.realpath(dev)))}"}} 1')
+        for key, f in (("busy", "gpu_busy_percent"), ("membusy", "mem_busy_percent")):
+            v = rd(f"{dev}/{f}")
+            if v is not None:
+                series[key].append(f"{{{gpu}}} {v / 100}")
+        series["total"].append(f"{{{gpu}}} {int(total)}")
+        used = rd(f"{dev}/mem_info_vram_used")
+        if used is not None:
+            series["used"].append(f"{{{gpu}}} {int(used)}")
+        for hw in glob.glob(f"{dev}/hwmon/hwmon*"):
+            for t in sorted(glob.glob(f"{hw}/temp*_input")):
+                v = rd(t)
+                label = rds(t.replace("_input", "_label")) or os.path.basename(t)[:-6]
+                if v is not None:
+                    series["temp"].append(f'{{{gpu},sensor="{esc(label)}"}} {v / 1000}')
+            p = rd(f"{hw}/power1_average")
+            p = p if p is not None else rd(f"{hw}/power1_input")
+            if p is not None:
+                series["power"].append(f"{{{gpu}}} {p / 1e6}")
+            c = rd(f"{hw}/power1_cap")
+            if c is not None:
+                series["cap"].append(f"{{{gpu}}} {c / 1e6}")
+            for n, clk in (("1", "sm"), ("2", "memory")):
+                v = rd(f"{hw}/freq{n}_input")
+                if v is not None:
+                    series["clock"].append(f'{{{gpu},clock="{clk}"}} {int(v)}')
+            v = rd(f"{hw}/fan1_input")
+            if v is not None:
+                series["fan"].append(f"{{{gpu}}} {int(v)}")
+    meta = {
+        "info": ("llm_gpu_info", "GPU identity (value is always 1)."),
+        "busy": ("llm_gpu_busy_ratio", "GPU busy (0-1)."),
+        "membusy": ("llm_gpu_memory_busy_ratio", "Memory controller busy (0-1)."),
+        "used": ("llm_gpu_memory_used_bytes", "VRAM used."),
+        "total": ("llm_gpu_memory_total_bytes", "VRAM total."),
+        "temp": ("llm_gpu_temperature_celsius", "GPU temperature per sensor (edge, junction, mem)."),
+        "power": ("llm_gpu_power_draw_watts", "GPU power draw (average)."),
+        "cap": ("llm_gpu_power_limit_watts", "GPU power limit."),
+        "clock": ("llm_gpu_clock_hz", "Current clock (sm = graphics, memory)."),
+        "fan": ("llm_gpu_fan_rpm", "Fan speed."),
+    }
+    out = []
+    for key, rows in series.items():
+        if not rows:
+            continue
+        mname, help_ = meta[key]
+        out += [f"# HELP {mname} {help_}", f"# TYPE {mname} gauge"]
+        out += rows if key == "info" else [mname + r for r in rows]
+    return out
+
+
 def main():
     lines = [
         "# HELP llm_server_up 1 if llama-server answered /props, else 0.",
@@ -77,7 +173,8 @@ def main():
             "alias": props.get("model_alias", ""),
             "model_file": os.path.basename(path),
             "model_repo": f"{m.group(1)}/{m.group(2)}" if m else "",
-            "quant": meta.get("ftype") or props.get("model_ftype", ""),
+            "quant": (q.group(1) if (q := re.search(r"((?:UD-)?I?Q\d[\w]*?)(?:-\d{5}-of-\d{5})?\.gguf$", path))
+                      else meta.get("ftype") or props.get("model_ftype", "")),
             "build": props.get("build_info", ""),
         }
         lab = ",".join(f'{k}="{esc(v)}"' for k, v in labels.items())
@@ -107,6 +204,7 @@ def main():
             f"llm_model_sleeping {int(bool(props.get('is_sleeping')))}",
         ]
         lines += slot_metrics()
+    lines += amd_gpu_metrics()
     lines += [
         "# HELP llm_model_info_last_run_timestamp_seconds Last run of llm-model-info.",
         "# TYPE llm_model_info_last_run_timestamp_seconds gauge",
