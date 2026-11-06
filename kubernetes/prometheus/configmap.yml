@@ -123,11 +123,12 @@ data:
           - targets: ['192.168.0.243:9835']
             labels:
               server: 'mr-v100-server'
-      - job_name: 'llm-llamacpp'             # llama-server --metrics (llamacpp:* metrics)
+      - job_name: 'llm-llamacpp'             # llamacpp:* metrics: llama-server --metrics, or Strata /metrics/prometheus
         static_configs:
           - targets: ['192.168.0.243:8080']
             labels:
               server: 'mr-v100-server'
-          - targets: ['192.168.0.242:8080']
+          - targets: ['192.168.0.242:8080']  # Strata (strata-server.service): its /metrics is JSON
             labels:
               server: 'mr-r9700-server'
+              __metrics_path__: '/metrics/prometheus'

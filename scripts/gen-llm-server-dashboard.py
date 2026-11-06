@@ -106,8 +106,18 @@ GEN_TPS = (f'rate(llamacpp:tokens_predicted_total{{{S}}}[{RI}]) / '
 PP_TPS = (f'rate(llamacpp:prompt_tokens_total{{{S}}}[{RI}]) / '
           f'rate(llamacpp:prompt_seconds_total{{{S}}}[{RI}])')
 THRU = f'rate(llamacpp:tokens_predicted_total{{{S}}}[{RI}])'
-MTP = (f'100 * rate(llamacpp:spec_decode_num_accepted_tokens_total{{{S}}}[{RI}]) / '
-       f'rate(llamacpp:spec_decode_num_draft_tokens_total{{{S}}}[{RI}])')
+# Speculative-decoding acceptance: llama.cpp spec_decode_* counters, else Strata's strata:drafts_* (MTP or DFlash2).
+def accept(fn, win):
+    return (f'(100 * {fn}(llamacpp:spec_decode_num_accepted_tokens_total{{{S}}}[{win}]) / '
+            f'{fn}(llamacpp:spec_decode_num_draft_tokens_total{{{S}}}[{win}])) or '
+            f'(100 * {fn}(strata:drafts_accepted_total{{{S}}}[{win}]) / {fn}(strata:drafts_offered_total{{{S}}}[{win}]))')
+
+
+MTP = accept('rate', RI)
+# Context peak: llama.cpp n_tokens_max (since start), else (Strata) the max of the slot usage over the time range.
+CTX_PEAK = (f'(100 * llamacpp:n_tokens_max{{{S}}} / on(server) llm_model_context_size{{{S}}}) or '
+            f'(100 * max_over_time(sum by (server) (llm_slot_context_tokens{{{S}}})[$__range:]) / '
+            f'on(server) sum by (server) (llm_slot_context_size{{{S}}}))')
 INFO = f'llm_model_info{{{S}}}'
 GPUINFO = f'nvidia_smi_gpu_info{{{S}}} or llm_gpu_info{{{S}}}'
 
@@ -153,18 +163,18 @@ stat("Tokens generated (range)", 12, y, 4, 4,
 stat("Prompt tokens (range)", 16, y, 4, 4,
      [tgt(f'increase(llamacpp:prompt_tokens_total{{{S}}}[$__range])', instant=True)], unit="short", decimals=1,
      desc="Prompt tokens processed, excluding tokens reused from the prompt cache.")
-stat("MTP acceptance (range)", 20, y, 4, 4,
-     [tgt(f'100 * increase(llamacpp:spec_decode_num_accepted_tokens_total{{{S}}}[$__range]) / '
-          f'increase(llamacpp:spec_decode_num_draft_tokens_total{{{S}}}[$__range])', instant=True)],
+stat("Draft acceptance (range)", 20, y, 4, 4,
+     [tgt(accept('increase', '$__range'), instant=True)],
      unit="percent", decimals=0,
      steps=[{"color": "red", "value": None}, {"color": "orange", "value": 40}, {"color": "green", "value": 60}],
-     desc="Share of MTP draft tokens accepted by the target model.")
+     desc="Share of draft tokens (llama.cpp MTP; Strata MTP or DFlash2) accepted by the target model.")
 stat("Requests active", 14, y - 4, 5, 4, [tgt(f'llamacpp:requests_processing{{{S}}}', instant=True)],
      steps=[{"color": "text", "value": None}, {"color": "green", "value": 1}])
 stat("Context peak", 19, y - 4, 5, 4,
-     [tgt(f'100 * llamacpp:n_tokens_max{{{S}}} / on(server) llm_model_context_size{{{S}}}', instant=True)],
+     [tgt(CTX_PEAK, instant=True)],
      unit="percent", decimals=0, steps=PCT,
-     desc="Largest sequence (prompt + generation) since llama-server start, as % of the configured context.")
+     desc="Largest sequence (prompt + generation) as % of the configured context: since start (llama.cpp) "
+          "or within the selected time range (Strata, from /slots samples).")
 y += 4
 
 # ---------------------------------------------------------------- Tokens per second
@@ -179,8 +189,8 @@ ts("Tokens per second", 0, y, 16, 10, [
    desc="Generation t/s = decode speed while generating (gaps = idle). Effective throughput = generated tokens "
         "per wall-clock second (0 when idle). Prompt t/s on the right axis. llama.cpp exposes cumulative "
         "counters, so values are averages over the rate interval (>= 1 min).")
-ts("MTP draft acceptance", 16, y, 8, 10, [tgt(MTP, "accepted %", "A")], unit="percent", mn=0, mx=100,
-   decimals=0, desc="Accepted / drafted MTP tokens. Higher = bigger speed-up from speculative decoding.")
+ts("Draft acceptance", 16, y, 8, 10, [tgt(MTP, "accepted %", "A")], unit="percent", mn=0, mx=100,
+   decimals=0, desc="Accepted / drafted tokens (llama.cpp MTP; Strata MTP or DFlash2). Higher = bigger speed-up.")
 y += 10
 ts("Tokens per minute", 0, y, 12, 8, [
     tgt(f'60 * rate(llamacpp:tokens_predicted_total{{{S}}}[{RI}])', "generated", "A"),
@@ -215,7 +225,7 @@ stat("Generated (running request)", 10, y + 4, 4, 4,
      desc="Tokens generated so far by the request in progress (0 when idle).")
 ts("Context window usage", 14, y, 10, 8, [
     tgt(CTX_PCT, "used %", "A"),
-    tgt(f'100 * llamacpp:n_tokens_max{{{S}}} / on(server) llm_model_context_size{{{S}}}', "peak since start %", "B"),
+    tgt(CTX_PEAK, "peak %", "B"),
 ], unit="percent", mn=0, decimals=1, legend_calcs=("mean", "max", "lastNotNull"),
    overrides=[color("used %", "green"), color("peak since start %", "orange")],
    desc="used % = tokens in context / context size (10 s samples). peak = largest sequence since llama-server start.")

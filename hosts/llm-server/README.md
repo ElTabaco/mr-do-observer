@@ -10,6 +10,7 @@ static targets.
 | Component | Where | Port | Source / version | Metrics |
 |---|---|---|---|---|
 | llama-server `--metrics` | LLM host (already running) | 8080 | llama.cpp | `llamacpp:*` (tokens, t/s, requests, MTP drafts) |
+| Strata `/metrics/prometheus` | LLM host (`strata-server.service`, mr-r9700) | 8080 | Strata 0.2.11 | the same `llamacpp:*` names (tokens, t/s, requests; no `spec_decode_*`, no `n_tokens_max`) + `strata:*` (`drafts_offered_total`, `drafts_accepted_total`, `requests_total`, `model_loaded`, tool-call repair counters). Strata's `/metrics` is JSON, so Prometheus sets `__metrics_path__: '/metrics/prometheus'` on that target. Without an API key on the server no key is needed for scraping |
 | prometheus-node-exporter | LLM host, systemd `prometheus-node-exporter.service`, user `prometheus` | 9100 | Ubuntu apt, 1.10.2-1 | `node_*` (CPU, RAM, swap, disk, network, temperatures) |
 | llm-model-info | LLM host, `llm-model-info.timer` (every 10 s) → `llm-model-info.service` (oneshot, user `prometheus`) | – (textfile collector of node-exporter) | this folder | `llm_*` (model alias/file/quant/build, context, parameters, size, context-window usage per slot; AMD GPUs: `llm_gpu_*`) |
 | nvidia-gpu-exporter (NVIDIA hosts only; skipped when `nvidia-smi` is missing) | LLM host, systemd `nvidia_gpu_exporter.service`, user `nvidia_gpu_exporter` | 9835 | [utkuozdemir/nvidia_gpu_exporter](https://github.com/utkuozdemir/nvidia_gpu_exporter) 1.17.0 (`.deb`, sha256-pinned) | `nvidia_smi_*` (utilisation, VRAM, temperature, power, clocks) |
@@ -22,7 +23,7 @@ static targets.
 | server label | Host | Targets | GPU exporter |
 |---|---|---|---|
 | `mr-v100-server` | 192.168.0.243 (`mrlegion`) | `:9100`, `:9835`, `:8080` | NVIDIA (Tesla V100-PCIE-32GB) via nvidia-gpu-exporter |
-| `mr-r9700-server` | 192.168.0.242 (`mr-r9700`) | `:9100`, `:8080` | AMD (Radeon AI PRO R9700, gfx1201) via llm-model-info `llm_gpu_*` |
+| `mr-r9700-server` | 192.168.0.242 (`mr-r9700`) | `:9100`, `:8080` (Strata, scraped at `/metrics/prometheus`) | AMD (Radeon AI PRO R9700, gfx1201) via llm-model-info `llm_gpu_*` |
 
 ## Files in this folder
 
@@ -39,7 +40,7 @@ static targets.
 |---|---|---|---|
 | `NGX_VERSION` | `install-exporters.sh` | `1.17.0` | nvidia-gpu-exporter release |
 | `NGX_SHA256` | `install-exporters.sh` | `1bc0f7f811579a7505ed284e9cdcea1a454f3101da2c60877a7aaafb15fecde4` | sha256 of the amd64 `.deb` (change together with `NGX_VERSION`) |
-| `LLM_URL` | `llm-model-info` (set in the `.service`) | `http://127.0.0.1:8080` | llama-server base URL |
+| `LLM_URL` | `llm-model-info` (set in the `.service`) | `http://127.0.0.1:8080` | llama-server or Strata base URL (both serve `/props`, `/v1/models`, `/slots`) |
 | `TEXTFILE_DIR` | `llm-model-info`, installer | `/var/lib/prometheus/node-exporter` | node-exporter textfile collector directory (Ubuntu package default), owner `prometheus:prometheus`, 0755 |
 
 Output file: `/var/lib/prometheus/node-exporter/llm_model.prom` (0644).
@@ -49,7 +50,7 @@ Output file: `/var/lib/prometheus/node-exporter/llm_model.prom` (0644).
 | Metric | Labels / value |
 |---|---|
 | `llm_server_up` | 1 = llama-server answered `/props`, 0 = not reachable (all other `llm_model_*` are then absent) |
-| `llm_model_info` | labels `alias`, `model_file`, `model_repo` (from a Hugging Face cache path, else empty), `quant` (from the file name, e.g. `UD-Q4_K_XL`, `Q8_0`; else the GGUF ftype), `build`; value 1 |
+| `llm_model_info` | labels `alias` (Strata: first entry of `/v1/models` `aliases`, else `/props` `model_alias`), `model_file`, `model_repo` (from a Hugging Face cache path, else empty), `quant` (from the file name, e.g. `UD-Q4_K_XL`, `Q8_0`; else the GGUF ftype), `build`; value 1 |
 | `llm_model_context_size` | configured context (`-c`), tokens |
 | `llm_model_context_train` | trained context of the model, tokens |
 | `llm_model_slots` | parallel slots (`-np`) |
@@ -63,6 +64,9 @@ Output file: `/var/lib/prometheus/node-exporter/llm_model.prom` (0644).
 | `llm_model_info_last_run_timestamp_seconds` | unix time of the last run |
 
 `llm_slot_*` are absent when llama-server runs with `--no-slots` (`/slots` disabled).
+
+`llm_model_context_train`, `llm_model_parameters` and `llm_model_size_bytes` are written only when the engine reports
+them in `/v1/models` `meta` (llama.cpp does; Strata 0.2.11 does not), so Grafana shows "No data" instead of 0.
 
 AMD GPU metrics (`llm_gpu_*`, label `gpu` = index of AMD discrete GPUs; AMD cards with < 4 GiB VRAM and non-AMD cards are
 skipped, e.g. the Intel iGPU on mr-r9700). NVIDIA GPUs are not exported here — they use nvidia-gpu-exporter.
@@ -112,9 +116,9 @@ default range 6 h.
 
 | Row | Panels |
 |---|---|
-| Model & status | alias, model file, quant, parameters, weights size, context, llama.cpp build, llama-server up/down, host uptime; generation t/s (now and range average), prompt t/s, tokens generated, prompt tokens, MTP acceptance, active requests, context peak |
-| Tokens per second | **Tokens per second** chart (generation t/s, effective throughput t/s, prompt t/s on right axis), MTP draft acceptance %, tokens per minute, requests processing/deferred |
-| Context window | context used % (gauge), tokens in context, tokens free, slot busy, tokens generated by the running request; usage % over time with the peak since llama-server start |
+| Model & status | alias, model file, quant, parameters, weights size, context, llama.cpp build, llama-server up/down, host uptime; generation t/s (now and range average), prompt t/s, tokens generated, prompt tokens, draft acceptance, active requests, context peak |
+| Tokens per second | **Tokens per second** chart (generation t/s, effective throughput t/s, prompt t/s on right axis), draft acceptance % (MTP / DFlash2), tokens per minute, requests processing/deferred |
+| Context window | context used % (gauge), tokens in context, tokens free, slot busy, tokens generated by the running request; usage % over time with the peak (llama.cpp: since start, `llamacpp:n_tokens_max`; Strata: max of `/slots` samples in the time range) |
 | GPU | name, driver, utilisation, VRAM %, temperature (AMD: edge), power % of limit; utilisation, VRAM, temperature (AMD: every sensor), power vs limit, SM/memory clocks over time — NVIDIA via `nvidia_smi_*`, AMD via `llm_gpu_*` |
 | System | CPU, RAM, swap, disk `/`, load, CPU temperature; CPU by mode, memory, network, disk I/O over time |
 
@@ -124,7 +128,8 @@ Tokens/s definitions (llama.cpp exposes cumulative counters, so all values are a
 - **Generation t/s** = `rate(llamacpp:tokens_predicted_total) / rate(llamacpp:tokens_predicted_seconds_total)` — decode speed while generating; empty when idle.
 - **Effective throughput** = `rate(llamacpp:tokens_predicted_total)` — generated tokens per wall-clock second; 0 when idle.
 - **Prompt t/s** = `rate(llamacpp:prompt_tokens_total) / rate(llamacpp:prompt_seconds_total)` — prefill speed (cache hits excluded).
-- **MTP acceptance** = `rate(..spec_decode_num_accepted_tokens_total) / rate(..spec_decode_num_draft_tokens_total)`.
+- **Draft acceptance** = `rate(..spec_decode_num_accepted_tokens_total) / rate(..spec_decode_num_draft_tokens_total)` (llama.cpp),
+  else `rate(strata:drafts_accepted_total) / rate(strata:drafts_offered_total)` (Strata, MTP or DFlash2).
 
 Counters reset when llama-server restarts; `rate`/`increase` handle the reset.
 
