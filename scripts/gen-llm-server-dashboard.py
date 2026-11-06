@@ -188,6 +188,34 @@ ts("Requests", 12, y, 12, 8, [
 ], unit="none", mn=0, decimals=0, legend_calcs=("mean", "max"))
 y += 8
 
+# ---------------------------------------------------------------- Context window
+row("Context window", y); y += 1
+CTX_TOK = f'sum by (server) (llm_slot_context_tokens{{{S}}})'
+CTX_SIZE = f'sum by (server) (llm_slot_context_size{{{S}}})'
+CTX_PCT = f'100 * {CTX_TOK} / {CTX_SIZE}'
+gauge("Context window used (now)", 0, y, 6, 8, [tgt(CTX_PCT, instant=True)], steps=PCT,
+      desc="Tokens held in the slot context (prompt + generated so far) / context size. Stays at the last "
+           "conversation length after a request (kept for prompt caching). Sampled every 10 s from /slots.")
+stat("Tokens in context", 6, y, 4, 4, [tgt(CTX_TOK, instant=True)], unit="none", decimals=0,
+     desc="Tokens currently held in the slot context(s).")
+stat("Tokens free", 10, y, 4, 4, [tgt(f'{CTX_SIZE} - {CTX_TOK}', instant=True)], unit="none", decimals=0,
+     steps=[{"color": "red", "value": None}, {"color": "orange", "value": 4096}, {"color": "green", "value": 16384}],
+     desc="Context size minus tokens in context.")
+stat("Slot busy", 6, y + 4, 4, 4, [tgt(f'max by (server) (llm_slot_processing{{{S}}})', instant=True)],
+     mappings=[{"type": "value", "options": {"0": {"text": "idle", "color": "text", "index": 0},
+                                             "1": {"text": "generating", "color": "green", "index": 1}}}],
+     steps=[{"color": "text", "value": None}], color_mode="value")
+stat("Generated (running request)", 10, y + 4, 4, 4,
+     [tgt(f'sum by (server) (llm_slot_decoded_tokens{{{S}}})', instant=True)], unit="none", decimals=0,
+     desc="Tokens generated so far by the request in progress (0 when idle).")
+ts("Context window usage", 14, y, 10, 8, [
+    tgt(CTX_PCT, "used %", "A"),
+    tgt(f'100 * llamacpp:n_tokens_max{{{S}}} / on(server) llm_model_context_size{{{S}}}', "peak since start %", "B"),
+], unit="percent", mn=0, decimals=1, legend_calcs=("mean", "max", "lastNotNull"),
+   overrides=[color("used %", "green"), color("peak since start %", "orange")],
+   desc="used % = tokens in context / context size (10 s samples). peak = largest sequence since llama-server start.")
+y += 8
+
 # ---------------------------------------------------------------- GPU
 row("GPU", y); y += 1
 stat("GPU", 0, y, 5, 4, [tgt(GPUINFO, instant=True, fmt="table")], field="/^name$/", color_mode="none")

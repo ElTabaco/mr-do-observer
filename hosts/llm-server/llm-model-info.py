@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Export the model served by llama-server as Prometheus metrics (node-exporter textfile collector).
 
-Reads llama-server /props and /v1/models and atomically writes <TEXTFILE_DIR>/llm_model.prom.
-Run by llm-model-info.timer every 30 s. Stdlib only.
+Reads llama-server /props, /v1/models and /slots and atomically writes <TEXTFILE_DIR>/llm_model.prom.
+Run by llm-model-info.timer every 10 s. Stdlib only.
 
 Environment:
   LLM_URL       llama-server base URL          (default http://127.0.0.1:8080)
@@ -27,6 +27,36 @@ def get(path):
 
 def esc(v):
     return str(v).replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
+
+
+def slot_metrics():
+    """Context-window usage per slot from /slots (absent if llama-server runs with --no-slots).
+
+    n_prompt_tokens grows with every generated token (prompt + output so far) and stays at the
+    cached conversation length after the request, so it is the number of tokens held in the slot.
+    """
+    try:
+        slots = get("/slots")
+    except Exception:
+        return []
+    out = [
+        "# HELP llm_slot_context_tokens Tokens currently held in the slot context (prompt + generated).",
+        "# TYPE llm_slot_context_tokens gauge",
+    ]
+    out += [f'llm_slot_context_tokens{{slot="{s.get("id", i)}"}} {s.get("n_prompt_tokens", 0)}'
+            for i, s in enumerate(slots)]
+    out += ["# HELP llm_slot_context_size Context size of the slot (tokens).",
+            "# TYPE llm_slot_context_size gauge"]
+    out += [f'llm_slot_context_size{{slot="{s.get("id", i)}"}} {s.get("n_ctx", 0)}' for i, s in enumerate(slots)]
+    out += ["# HELP llm_slot_processing 1 while the slot is processing a request.",
+            "# TYPE llm_slot_processing gauge"]
+    out += [f'llm_slot_processing{{slot="{s.get("id", i)}"}} {int(bool(s.get("is_processing")))}'
+            for i, s in enumerate(slots)]
+    out += ["# HELP llm_slot_decoded_tokens Tokens generated so far in the running request.",
+            "# TYPE llm_slot_decoded_tokens gauge"]
+    out += [f'llm_slot_decoded_tokens{{slot="{s.get("id", i)}"}} '
+            f'{((s.get("next_token") or [{}])[0] or {}).get("n_decoded", 0)}' for i, s in enumerate(slots)]
+    return out
 
 
 def main():
@@ -76,6 +106,7 @@ def main():
             "# TYPE llm_model_sleeping gauge",
             f"llm_model_sleeping {int(bool(props.get('is_sleeping')))}",
         ]
+        lines += slot_metrics()
     lines += [
         "# HELP llm_model_info_last_run_timestamp_seconds Last run of llm-model-info.",
         "# TYPE llm_model_info_last_run_timestamp_seconds gauge",

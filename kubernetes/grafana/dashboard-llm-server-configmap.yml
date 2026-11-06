@@ -1638,7 +1638,7 @@ data:
         },
         {
           "type": "row",
-          "title": "GPU",
+          "title": "Context window",
           "id": 24,
           "collapsed": false,
           "gridPos": {
@@ -1650,9 +1650,493 @@ data:
           "panels": []
         },
         {
+          "type": "gauge",
+          "title": "Context window used (now)",
+          "id": 25,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Tokens held in the slot context (prompt + generated so far) / context size. Stays at the last conversation length after a request (kept for prompt caching). Sampled every 10 s from /slots.",
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 33
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 75
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * sum by (server) (llm_slot_context_tokens{server=\"$server\"}) / sum by (server) (llm_slot_context_size{server=\"$server\"})",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Tokens in context",
+          "id": 26,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Tokens currently held in the slot context(s).",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 6,
+            "y": 33
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (server) (llm_slot_context_tokens{server=\"$server\"})",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Tokens free",
+          "id": 27,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Context size minus tokens in context.",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 10,
+            "y": 33
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 4096
+                  },
+                  {
+                    "color": "green",
+                    "value": 16384
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (server) (llm_slot_context_size{server=\"$server\"}) - sum by (server) (llm_slot_context_tokens{server=\"$server\"})",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Slot busy",
+          "id": 28,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 6,
+            "y": 37
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "idle",
+                      "color": "text",
+                      "index": 0
+                    },
+                    "1": {
+                      "text": "generating",
+                      "color": "green",
+                      "index": 1
+                    }
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "max by (server) (llm_slot_processing{server=\"$server\"})",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Generated (running request)",
+          "id": 29,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "Tokens generated so far by the request in progress (0 when idle).",
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 10,
+            "y": 37
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "color": {
+                "mode": "thresholds"
+              },
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "colorMode": "value",
+            "graphMode": "none",
+            "textMode": "auto",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "wideLayout": true,
+            "showPercentChange": false
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (server) (llm_slot_decoded_tokens{server=\"$server\"})",
+              "legendFormat": "",
+              "refId": "A",
+              "range": false,
+              "instant": true
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Context window usage",
+          "id": 30,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "description": "used % = tokens in context / context size (10 s samples). peak = largest sequence since llama-server start.",
+          "gridPos": {
+            "h": 8,
+            "w": 10,
+            "x": 14,
+            "y": 33
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false,
+                "axisBorderShow": false,
+                "lineInterpolation": "smooth",
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                }
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "min": 0,
+              "decimals": 1
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "used %"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "green"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "peak since start %"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "orange"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true,
+              "calcs": [
+                "mean",
+                "max",
+                "lastNotNull"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * sum by (server) (llm_slot_context_tokens{server=\"$server\"}) / sum by (server) (llm_slot_context_size{server=\"$server\"})",
+              "legendFormat": "used %",
+              "refId": "A",
+              "range": true,
+              "instant": false
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "100 * llamacpp:n_tokens_max{server=\"$server\"} / on(server) llm_model_context_size{server=\"$server\"}",
+              "legendFormat": "peak since start %",
+              "refId": "B",
+              "range": true,
+              "instant": false
+            }
+          ]
+        },
+        {
+          "type": "row",
+          "title": "GPU",
+          "id": 31,
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 41
+          },
+          "panels": []
+        },
+        {
           "type": "stat",
           "title": "GPU",
-          "id": 25,
+          "id": 32,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1662,7 +2146,7 @@ data:
             "h": 4,
             "w": 5,
             "x": 0,
-            "y": 33
+            "y": 42
           },
           "fieldConfig": {
             "defaults": {
@@ -1717,7 +2201,7 @@ data:
         {
           "type": "stat",
           "title": "Driver",
-          "id": 26,
+          "id": 33,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1727,7 +2211,7 @@ data:
             "h": 4,
             "w": 3,
             "x": 5,
-            "y": 33
+            "y": 42
           },
           "fieldConfig": {
             "defaults": {
@@ -1782,7 +2266,7 @@ data:
         {
           "type": "gauge",
           "title": "GPU utilisation",
-          "id": 27,
+          "id": 34,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1792,7 +2276,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 8,
-            "y": 33
+            "y": 42
           },
           "fieldConfig": {
             "defaults": {
@@ -1850,7 +2334,7 @@ data:
         {
           "type": "gauge",
           "title": "VRAM used",
-          "id": 28,
+          "id": 35,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1860,7 +2344,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 33
+            "y": 42
           },
           "fieldConfig": {
             "defaults": {
@@ -1918,7 +2402,7 @@ data:
         {
           "type": "gauge",
           "title": "GPU temperature",
-          "id": 29,
+          "id": 36,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1928,7 +2412,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 33
+            "y": 42
           },
           "fieldConfig": {
             "defaults": {
@@ -1986,7 +2470,7 @@ data:
         {
           "type": "gauge",
           "title": "Power draw",
-          "id": 30,
+          "id": 37,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -1996,7 +2480,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 33
+            "y": 42
           },
           "fieldConfig": {
             "defaults": {
@@ -2054,7 +2538,7 @@ data:
         {
           "type": "timeseries",
           "title": "GPU utilisation",
-          "id": 31,
+          "id": 38,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2064,7 +2548,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 37
+            "y": 46
           },
           "fieldConfig": {
             "defaults": {
@@ -2143,7 +2627,7 @@ data:
         {
           "type": "timeseries",
           "title": "VRAM",
-          "id": 32,
+          "id": 39,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2153,7 +2637,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 37
+            "y": 46
           },
           "fieldConfig": {
             "defaults": {
@@ -2231,7 +2715,7 @@ data:
         {
           "type": "timeseries",
           "title": "GPU temperature",
-          "id": 33,
+          "id": 40,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2241,7 +2725,7 @@ data:
             "h": 8,
             "w": 8,
             "x": 0,
-            "y": 45
+            "y": 54
           },
           "fieldConfig": {
             "defaults": {
@@ -2306,7 +2790,7 @@ data:
         {
           "type": "timeseries",
           "title": "GPU power",
-          "id": 34,
+          "id": 41,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2316,7 +2800,7 @@ data:
             "h": 8,
             "w": 8,
             "x": 8,
-            "y": 45
+            "y": 54
           },
           "fieldConfig": {
             "defaults": {
@@ -2393,7 +2877,7 @@ data:
         {
           "type": "timeseries",
           "title": "GPU clocks",
-          "id": 35,
+          "id": 42,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2403,7 +2887,7 @@ data:
             "h": 8,
             "w": 8,
             "x": 16,
-            "y": 45
+            "y": 54
           },
           "fieldConfig": {
             "defaults": {
@@ -2480,20 +2964,20 @@ data:
         {
           "type": "row",
           "title": "System",
-          "id": 36,
+          "id": 43,
           "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 53
+            "y": 62
           },
           "panels": []
         },
         {
           "type": "gauge",
           "title": "CPU",
-          "id": 37,
+          "id": 44,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2503,7 +2987,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 0,
-            "y": 54
+            "y": 63
           },
           "fieldConfig": {
             "defaults": {
@@ -2561,7 +3045,7 @@ data:
         {
           "type": "gauge",
           "title": "RAM used",
-          "id": 38,
+          "id": 45,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2571,7 +3055,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 4,
-            "y": 54
+            "y": 63
           },
           "fieldConfig": {
             "defaults": {
@@ -2629,7 +3113,7 @@ data:
         {
           "type": "stat",
           "title": "Swap used",
-          "id": 39,
+          "id": 46,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2639,7 +3123,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 8,
-            "y": 54
+            "y": 63
           },
           "fieldConfig": {
             "defaults": {
@@ -2702,7 +3186,7 @@ data:
         {
           "type": "gauge",
           "title": "Disk / used",
-          "id": 40,
+          "id": 47,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2712,7 +3196,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 54
+            "y": 63
           },
           "fieldConfig": {
             "defaults": {
@@ -2770,7 +3254,7 @@ data:
         {
           "type": "stat",
           "title": "Load (1m / 16 threads)",
-          "id": 41,
+          "id": 48,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2780,7 +3264,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 54
+            "y": 63
           },
           "fieldConfig": {
             "defaults": {
@@ -2843,7 +3327,7 @@ data:
         {
           "type": "stat",
           "title": "CPU temperature (max)",
-          "id": 42,
+          "id": 49,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2853,7 +3337,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 54
+            "y": 63
           },
           "fieldConfig": {
             "defaults": {
@@ -2916,7 +3400,7 @@ data:
         {
           "type": "timeseries",
           "title": "CPU",
-          "id": 43,
+          "id": 50,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -2926,7 +3410,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 58
+            "y": 67
           },
           "fieldConfig": {
             "defaults": {
@@ -2994,7 +3478,7 @@ data:
         {
           "type": "timeseries",
           "title": "Memory",
-          "id": 44,
+          "id": 51,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3004,7 +3488,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 58
+            "y": 67
           },
           "fieldConfig": {
             "defaults": {
@@ -3104,7 +3588,7 @@ data:
         {
           "type": "timeseries",
           "title": "Network",
-          "id": 45,
+          "id": 52,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3114,7 +3598,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 66
+            "y": 75
           },
           "fieldConfig": {
             "defaults": {
@@ -3191,7 +3675,7 @@ data:
         {
           "type": "timeseries",
           "title": "Disk I/O",
-          "id": 46,
+          "id": 53,
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -3201,7 +3685,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 66
+            "y": 75
           },
           "fieldConfig": {
             "defaults": {
