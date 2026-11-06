@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Install the monitoring exporters on an LLM server (Ubuntu + NVIDIA + llama-server).
-# Idempotent: safe to re-run. Does NOT touch llama-server.service.
+# Install the monitoring exporters on an LLM server (Ubuntu + NVIDIA or AMD + llama-server or Strata).
+# Idempotent: safe to re-run. Does NOT touch the engine units (llama-server / strata-server).
 #
 #   sudo bash install-exporters.sh            # run from this directory
 #
@@ -40,11 +40,27 @@ fi
 echo "== llm-model-info"
 install -m 0755 "$HERE/llm-model-info.py" /usr/local/bin/llm-model-info
 install -m 0644 "$HERE/llm-model-info.service" "$HERE/llm-model-info.timer" /etc/systemd/system/
+# Read-only view of the model directory (only that, home stays hidden): the GGUF header fallback for engines
+# without /v1/models meta (Strata). LLM_MODELS_DIR overrides; default = the ".../models" or ".../huggingface/hub"
+# root of the running engine's /props model_path.
+MODELS_DIR="${LLM_MODELS_DIR:-$(curl -fsS --max-time 10 http://127.0.0.1:8080/props 2>/dev/null | python3 -c '
+import json, os, re, sys
+p = json.load(sys.stdin).get("model_path", "")
+m = re.match(r"(.*/(?:models|huggingface/hub))/", p)
+print(m.group(1) if m else os.path.dirname(p))' 2>/dev/null || true)}"
+DROPIN=/etc/systemd/system/llm-model-info.service.d/10-models-dir.conf
+if [ -n "$MODELS_DIR" ] && [ -d "$MODELS_DIR" ]; then
+  install -d -m 0755 "$(dirname "$DROPIN")"
+  printf '[Service]\nProtectHome=tmpfs\nBindReadOnlyPaths=-%s\n' "$MODELS_DIR" > "$DROPIN"
+  echo "   models dir (read-only for llm-model-info): $MODELS_DIR"
+else
+  echo "   no models dir found (engine down?) - parameters/size only from /v1/models meta"
+fi
 systemctl daemon-reload
 systemctl enable --now prometheus-node-exporter.service $GPU_UNITS llm-model-info.timer
 systemctl start llm-model-info.service
 
 echo "== status"
-systemctl is-active prometheus-node-exporter $GPU_UNITS llm-model-info.timer llama-server || true
+systemctl is-active prometheus-node-exporter $GPU_UNITS llm-model-info.timer llama-server strata-server || true
 cat /etc/default/prometheus-node-exporter 2>/dev/null | grep -v '^#' | grep -v '^$' || true
 ls -l "$TEXTFILE_DIR"
