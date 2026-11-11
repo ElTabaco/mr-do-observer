@@ -59,6 +59,14 @@ spec:
             - name: dashboard-llm-server
               mountPath: /var/lib/grafana/dashboards/llm-servers
               readOnly: true
+            - name: dashboard-jellyfin
+              mountPath: /var/lib/grafana/dashboards/media
+              readOnly: true
+            # Alerting provisioning (contact point callmebot + mr-jellyfin rules). Rules route via
+            # rule-level notification_settings; the notification policy tree is not provisioned.
+            - name: alerting
+              mountPath: /etc/grafana/provisioning/alerting
+              readOnly: true
       volumes:
         - name: grafana-pvc-data
           persistentVolumeClaim:
@@ -78,3 +86,9 @@ spec:
         - name: dashboard-llm-server
           configMap:
             name: grafana-dashboard-llm-server
+        - name: dashboard-jellyfin
+          configMap:
+            name: grafana-dashboard-jellyfin
+        - name: alerting
+          configMap:
+            name: grafana-alerting
