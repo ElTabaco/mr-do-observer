@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: callmebot-relay
+  namespace: monitoring
+  labels:
+    app: callmebot-relay
+data:
+  relay.py: |
+    """Grafana webhook -> CallMeBot relay (stdlib only).
+
+    Grafana's webhook contact point POSTs JSON; CallMeBot (Telegram/WhatsApp) takes a GET with the
+    text in the query string. Target URL templates come from the Secret callmebot-relay (key
+    "urls", one template per line, "{text}" = URL-encoded message); they are never logged.
+    """
+    import json
+    import os
+    import sys
+    import time
+    import urllib.parse
+    import urllib.request
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    URLS = [u.strip() for u in os.environ.get("CALLMEBOT_URLS", "").splitlines() if u.strip()]
+    MAX_ALERTS = 5
+    MAX_LEN = 900
+
+
+    def log(msg):
+        print(time.strftime("%Y-%m-%dT%H:%M:%S"), msg, flush=True)
+
+
+    def render(payload):
+        alerts = payload.get("alerts") or []
+        lines = []
+        for a in alerts[:MAX_ALERTS]:
+            labels, ann = a.get("labels", {}), a.get("annotations", {})
+            state = "RESOLVED" if a.get("status") == "resolved" else "FIRING"
+            sev = labels.get("severity", "")
+            name = labels.get("alertname", "alert")
+            summary = ann.get("summary", "")
+            line = f"{state} [{sev}] {name}: {summary}".strip()
+            if state == "FIRING" and ann.get("description"):
+                line += f" | {ann['description']}"
+            lines.append(line)
+        if len(alerts) > MAX_ALERTS:
+            lines.append(f"... and {len(alerts) - MAX_ALERTS} more")
+        text = "\n".join(lines) or payload.get("title", "Grafana alert")
+        return text[:MAX_LEN]
+
+
+    def send(text):
+        ok = True
+        for i, tpl in enumerate(URLS):
+            url = tpl.replace("{text}", urllib.parse.quote(text))
+            host = urllib.parse.urlsplit(url).netloc
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "mr-callmebot-relay"})
+                with urllib.request.urlopen(req, timeout=30) as r:
+                    body = r.read(4000).decode("utf-8", "replace")
+                    good = r.status == 200 and "rror" not in body
+                    log(f"target {i} ({host}): HTTP {r.status} {'ok' if good else 'check response'}")
+                    ok &= good
+            except Exception as exc:  # report and continue with the next target
+                log(f"target {i} ({host}): {type(exc).__name__}: {exc}")
+                ok = False
+            time.sleep(3)  # CallMeBot rate limit
+        return ok
+
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200 if URLS else 503)
+            self.end_headers()
+            self.wfile.write(b"ok\n" if URLS else b"no targets configured\n")
+
+        def do_POST(self):
+            n = int(self.headers.get("Content-Length", "0"))
+            try:
+                payload = json.loads(self.rfile.read(n) or b"{}")
+            except ValueError:
+                self.send_response(400)
+                self.end_headers()
+                return
+            text = render(payload)
+            log(f"alert: {payload.get('status')} {len(payload.get('alerts') or [])} alert(s)")
+            ok = send(text)
+            self.send_response(200 if ok else 502)
+            self.end_headers()
+
+        def log_message(self, fmt, *args):  # quiet access log
+            pass
+
+
+    if __name__ == "__main__":
+        if not URLS:
+            log("WARNING: CALLMEBOT_URLS is empty")
+        log(f"listening on :8080, {len(URLS)} target(s)")
+        ThreadingHTTPServer(("0.0.0.0", 8080), Handler).serve_forever()

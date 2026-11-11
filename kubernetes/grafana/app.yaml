@@ -2,6 +2,7 @@
 # Manages:
 #   - grafana Deployment + Service
 #   - grafana PV + PVC (NFS)
+#   - alerting provisioning (alerting-configmap.yml) + callmebot-relay (Grafana webhook -> CallMeBot)
 #
 # Depends on the monitoring namespace (kubernetes/base/namespace.yml).
 apiVersion: argoproj.io/v1alpha1
